@@ -1,0 +1,4 @@
+{
+  "vendor_payment": "process_vendor_payment",
+  "default": "process_vendor_payment"
+}

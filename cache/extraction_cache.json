@@ -1,0 +1,140 @@
+{
+  "5bc4892b668b32ccb0a9888603a7c6e5": {
+    "doc_type": "approval",
+    "amount": 1200000,
+    "date": "2024-01-15",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.97,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\approval_vendor_b.eml",
+    "page_ref": 1,
+    "source_snippet": "CIO approves Vendor B for the \u20b912,00,000 purchase under Tender #TND-2024-SERVER-01.",
+    "summary": "CIO approval for Vendor B purchase order of \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "35af9ba5f2b58f3029139cb3bb26c46f": {
+    "doc_type": "invoice",
+    "amount": 600000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Advance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-001",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\invoice_1.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-001 for PO #4521. Line item: High Performance Enterprise Server - Advance (50%), \u20b96,00,000.",
+    "summary": "Invoice INV-2024-001 for \u20b96,00,000 matching PO #4521 advance terms.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "030695525188dd857cf50384c9f3f5d0": {
+    "doc_type": "invoice",
+    "amount": 650000,
+    "date": "2024-02-10",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Balance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      },
+      {
+        "description": "Premium support",
+        "quantity": 1,
+        "amount": 50000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-002",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\invoice_2.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-002 for PO #4521. Line items: Server Balance \u20b96,00,000, Premium support \u20b950,000.",
+    "summary": "Invoice INV-2024-002 for \u20b96,50,000 including \u20b950,000 Premium support.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "072d5dedaf8b35b915f4e50a4854ce07": {
+    "doc_type": "policy",
+    "amount": null,
+    "date": "2023-02-01",
+    "threshold_value": 500000,
+    "line_items": [],
+    "approver": null,
+    "vendor_name": null,
+    "ref_number": null,
+    "confidence": 0.99,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\policy_cfo_approval.eml",
+    "page_ref": 1,
+    "source_snippet": "Effective Feb 1, 2023, invoices above \u20b95,00,000 require CFO sign-off prior to payment disbursement.",
+    "summary": "Financial policy mandating CFO approval for invoices exceeding \u20b95,00,000 effective Feb 1, 2023.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "58d4e49d9065b7538ed91f9b163a044c": {
+    "doc_type": "purchase_order",
+    "amount": 1200000,
+    "date": "2024-01-18",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server",
+        "quantity": 1,
+        "unit_price": 1200000,
+        "total_price": 1200000
+      }
+    ],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "PO #4521",
+    "confidence": 0.99,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\po_4521.pdf",
+    "page_ref": 1,
+    "source_snippet": "PO Number: PO #4521 | Vendor: Vendor B Solutions | Total Amount: \u20b912,00,000 | Item: High Performance Enterprise Server",
+    "summary": "Purchase Order #4521 for Vendor B Solutions totaling \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "a1b50b136f91262cbf605be0733275c1": {
+    "doc_type": "decision",
+    "amount": 1200000,
+    "date": "2024-01-05",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": null,
+    "vendor_name": null,
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "E:\\evidence-flow\\data\\tender_server.pdf",
+    "page_ref": 1,
+    "source_snippet": "Approved Budget: \u20b912,00,000 (Twelve Lakh Indian Rupees) for 1 Server Unit",
+    "summary": "Tender for enterprise high-performance server with budget \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  }
+}
