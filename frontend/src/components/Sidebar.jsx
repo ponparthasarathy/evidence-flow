@@ -1,14 +1,23 @@
 import React from 'react';
-import { ShieldAlert, PlusSquare, Network, Settings, GitBranch, Database, BarChart3, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, LayoutDashboard, PlusSquare, Network, Settings, GitBranch, Database, BarChart3, ShieldCheck, Users, LineChart } from 'lucide-react';
 
-export default function Sidebar({ viewState, onNavigate, sovereignMode, setSovereignMode }) {
+export default function Sidebar({ viewState, onNavigate, sovereignMode, setSovereignMode, currentUser }) {
+  const isAdmin = currentUser?.role === 'Admin';
+  const isAuditorOrAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Auditor';
+
   const navItems = [
+    { id: 'dashboard', label: `${currentUser?.role || 'Role'} Portal`, icon: LayoutDashboard },
     { id: 'ingestion', label: 'New Ingestion', icon: PlusSquare },
     { id: 'explorer', label: 'Case Explorer', icon: Network },
     { id: 'analytics', label: 'Spend Analytics', icon: BarChart3 },
+    ...(isAuditorOrAdmin ? [{ id: 'graph-analytics', label: 'Graph View (Charts)', icon: LineChart }] : []),
     { id: 'compliance', label: 'CI/CD Compliance', icon: ShieldCheck },
+    ...(isAdmin ? [{ id: 'users', label: 'Users & RBAC', icon: Users }] : []),
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+
+
 
 
   return (

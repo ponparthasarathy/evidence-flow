@@ -6,13 +6,28 @@ import IngestionScreen from './components/IngestionScreen';
 import ProcessingScreen from './components/ProcessingScreen';
 import ReviewScreen from './components/ReviewScreen';
 import AnalyticsScreen from './components/AnalyticsScreen';
+import GraphAnalyticsScreen from './components/GraphAnalyticsScreen';
 import ComplianceScreen from './components/ComplianceScreen';
+import UserManagementScreen from './components/UserManagementScreen';
+import LoginScreen from './components/LoginScreen';
+import HeaderBar from './components/HeaderBar';
 import Sidebar from './components/Sidebar';
+
+import AdminDashboard from './components/dashboards/AdminDashboard';
+import AuditorDashboard from './components/dashboards/AuditorDashboard';
+import FinanceDashboard from './components/dashboards/FinanceDashboard';
+import ProcurementDashboard from './components/dashboards/ProcurementDashboard';
+import EngineeringDashboard from './components/dashboards/EngineeringDashboard';
+import HRDashboard from './components/dashboards/HRDashboard';
 
 const API_BASE = '/api';
 
 export default function App() {
-  const [viewState, setViewState] = useState('ingestion'); // 'ingestion' | 'processing' | 'review' | 'explorer' | 'analytics' | 'compliance' | 'settings'
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+
+  const [viewState, setViewState] = useState('dashboard'); // 'dashboard' | 'ingestion' | 'processing' | 'review' | 'explorer' | 'analytics' | 'compliance' | 'users' | 'settings'
   const [sovereignMode, setSovereignMode] = useState(false);
 
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
@@ -23,10 +38,25 @@ export default function App() {
   const [highlightedPath, setHighlightedPath] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchGraph = async () => {
+  const handleLoginSuccess = (user, token) => {
+    setCurrentUser(user);
+    setAuthToken(token);
+    setIsAuthenticated(true);
+    setViewState('dashboard');
+  };
+
+  const handleSignOut = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setAuthToken(null);
+  };
+
+  const fetchGraph = async (role = currentUser?.role || 'Admin') => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/graph`);
+      const res = await fetch(`${API_BASE}/graph`, {
+        headers: { 'X-User-Role': role }
+      });
       const data = await res.json();
       setGraphData(data);
     } catch (err) {
@@ -37,10 +67,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (viewState === 'explorer' && graphData.nodes.length === 0) {
-      fetchGraph();
+    if (isAuthenticated && viewState === 'explorer') {
+      fetchGraph(currentUser?.role);
     }
-  }, [viewState]);
+  }, [isAuthenticated, viewState, currentUser?.role]);
 
   const handleNodeClick = async (nodeId) => {
     const node = graphData.nodes.find(n => n.id === nodeId);
@@ -66,7 +96,6 @@ export default function App() {
       const data = await res.json();
       setQueryResult(data);
 
-      // Highlight path: Invoice 2 -> Payment -> CodeFunction
       setHighlightedPath({
         nodes: ["Invoice_INV-2024-002", "Payment_INV-2024-002", "CodeFunction_process_vendor_payment"],
         edges: ["Invoice_INV-2024-002->PAID_VIA->Payment_INV-2024-002", "Payment_INV-2024-002->EXECUTED_BY->CodeFunction_process_vendor_payment"]
@@ -86,7 +115,6 @@ export default function App() {
       const data = await res.json();
       setQueryResult(data);
 
-      // Highlight mismatch path: Policy -> CodeFunction -> Commit -> Dev
       setHighlightedPath({
         nodes: ["Policy_2023-02-01", "CodeFunction_process_vendor_payment", "Commit_2022-03-10", "Dev_Jane_Developer"],
         edges: ["Policy_2023-02-01->GOVERNS->CodeFunction_process_vendor_payment", "CodeFunction_process_vendor_payment->LAST_CHANGED_BY->Commit_2022-03-10", "Dev_Jane_Developer->AUTHORED->Commit_2022-03-10"]
@@ -106,13 +134,34 @@ export default function App() {
       const data = await res.json();
       setQueryResult(data);
 
-      // Highlight affected invoices exceeding hypothetical threshold
       setHighlightedPath({
         nodes: ["Invoice_INV-2024-001", "Invoice_INV-2024-002"],
         edges: ["PO #4521->BILLED_BY->Invoice_INV-2024-001", "PO #4521->BILLED_BY->Invoice_INV-2024-002"]
       });
     } catch (err) {
       console.error("Counterfactual query error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runNLQuery = async (queryText) => {
+    try {
+      setLoading(true);
+      setActiveQuery('nl');
+      const res = await fetch(`${API_BASE}/queries/nl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: queryText })
+      });
+      const data = await res.json();
+      setQueryResult(data);
+
+      if (data.highlighted_path) {
+        setHighlightedPath(data.highlighted_path);
+      }
+    } catch (err) {
+      console.error("NL query error:", err);
     } finally {
       setLoading(false);
     }
@@ -127,12 +176,29 @@ export default function App() {
   };
 
   const handleProcessingComplete = () => {
+    fetchGraph(currentUser?.role);
     setViewState('review');
   };
 
   const handleReviewAccept = () => {
     setViewState('explorer');
-    fetchGraph();
+    fetchGraph(currentUser?.role);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const renderRoleDashboard = () => {
+    switch (currentUser?.role) {
+      case 'Admin': return <AdminDashboard currentUser={currentUser} onNavigate={setViewState} />;
+      case 'Auditor': return <AuditorDashboard currentUser={currentUser} onNavigate={setViewState} />;
+      case 'PO Creator':
+      case 'Procurement': return <ProcurementDashboard currentUser={currentUser} onNavigate={setViewState} />;
+      case 'Engineer':
+      case 'Engineering': return <EngineeringDashboard currentUser={currentUser} onNavigate={setViewState} />;
+      default: return <AuditorDashboard currentUser={currentUser} onNavigate={setViewState} />;
+    }
   };
 
   return (
@@ -144,11 +210,21 @@ export default function App() {
         onNavigate={setViewState} 
         sovereignMode={sovereignMode}
         setSovereignMode={setSovereignMode}
+        currentUser={currentUser}
       />
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         
+        {/* Top Header Bar with User Profile & Sign Out */}
+        <HeaderBar currentUser={currentUser} onSignOut={handleSignOut} />
+
+        {viewState === 'dashboard' && (
+          <main style={{ flex: 1, overflowY: 'auto' }}>
+            {renderRoleDashboard()}
+          </main>
+        )}
+
         {viewState === 'ingestion' && (
           <main style={{ flex: 1, overflowY: 'auto' }}>
             <div style={{ padding: '32px' }}>
@@ -177,9 +253,21 @@ export default function App() {
           </main>
         )}
 
+        {viewState === 'graph-analytics' && (
+          <main style={{ flex: 1, overflowY: 'auto' }}>
+            <GraphAnalyticsScreen currentUser={currentUser} />
+          </main>
+        )}
+
         {viewState === 'compliance' && (
           <main style={{ flex: 1, overflowY: 'auto' }}>
             <ComplianceScreen />
+          </main>
+        )}
+
+        {viewState === 'users' && (
+          <main style={{ flex: 1, overflowY: 'auto' }}>
+            <UserManagementScreen currentUser={currentUser} />
           </main>
         )}
 
@@ -188,8 +276,10 @@ export default function App() {
             <div className="flat-panel" style={{ padding: '24px', maxWidth: '800px' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: '12px' }}>Settings & System Config</h2>
               <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div><strong>Logged In User:</strong> {currentUser.name} ({currentUser.email})</div>
+                <div><strong>Assigned Role:</strong> {currentUser.role}</div>
                 <div><strong>Theme:</strong> Notion Enterprise Minimalist (White / Red #BC0202)</div>
-                <div><strong>Backend API:</strong> FastAPI v0.2.0 (Port 8000)</div>
+                <div><strong>Backend API:</strong> FastAPI v0.3.0 (RBAC Authentication Enforced)</div>
                 <div><strong>Graph DB:</strong> Neo4j 5.18 (Port 7474 / 7687)</div>
                 <div><strong>Analytics Engine:</strong> DuckDB OLAP (data/analytics.duckdb)</div>
                 <div><strong>Vector DB:</strong> Qdrant Vector Search (Port 6333)</div>
@@ -205,6 +295,7 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '16px', gap: '16px' }}>
             {/* Query Bar */}
             <QueryControl
+              onRunNLQuery={runNLQuery}
               onRunQuery1={runQuery1}
               onRunQuery2={runQuery2}
               onRunCounterfactual={runCounterfactual}
@@ -231,6 +322,7 @@ export default function App() {
                   evidenceData={evidenceData}
                   queryResult={queryResult}
                   activeQuery={activeQuery}
+                  currentUser={currentUser}
                 />
               </aside>
             </div>
@@ -240,4 +332,6 @@ export default function App() {
     </div>
   );
 }
+
+
 

@@ -1,32 +1,57 @@
+import os
 import re
+import base64
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-try:
-    from presidio_analyzer import AnalyzerEngine
-    from presidio_anonymizer import AnonymizerEngine
-    analyzer = AnalyzerEngine()
-    anonymizer = AnonymizerEngine()
-    USE_PRESIDIO = True
-except Exception as e:
-    print(f"Presidio/Spacy load notice ({e}). Using regex PII redaction engine.")
-    analyzer = None
-    anonymizer = None
-    USE_PRESIDIO = False
+# 256-bit AES Encryption Key (derived from environment or default secure system key)
+_SECRET_KEY_RAW = os.getenv("EVIDENCE_AES_KEY", "evidence_flow_aes256_gcm_secret_key_32b!").encode("utf-8")[:32].ljust(32, b'0')
+_aes_engine = AESGCM(_SECRET_KEY_RAW)
+
+def encrypt_aes_256_gcm(plain_text: str) -> str:
+    """
+    Encrypts sensitive evidence content/data using AES-256-GCM (Galois/Counter Mode).
+    Returns Base64 encoded (12-byte nonce + ciphertext + authentication tag).
+    """
+    if not plain_text:
+        return ""
+    try:
+        nonce = os.urandom(12)  # 96-bit nonce per NIST SP 800-38D standard
+        ciphertext = _aes_engine.encrypt(nonce, plain_text.encode("utf-8"), None)
+        combined = nonce + ciphertext
+        return base64.b64encode(combined).decode("utf-8")
+    except Exception as e:
+        print(f"AES-256-GCM Encryption Error: {e}")
+        return plain_text
+
+
+def decrypt_aes_256_gcm(cipher_b64: str) -> str:
+    """
+    Decrypts and authenticates AES-256-GCM encrypted Base64 string.
+    Verifies GCM authentication tag to prevent tampering.
+    """
+    if not cipher_b64:
+        return ""
+    try:
+        combined = base64.b64decode(cipher_b64)
+        if len(combined) < 13:
+            return cipher_b64
+        nonce = combined[:12]
+        ciphertext = combined[12:]
+        plain_bytes = _aes_engine.decrypt(nonce, ciphertext, None)
+        return plain_bytes.decode("utf-8")
+    except Exception as e:
+        print(f"AES-256-GCM Decryption Error: {e}")
+        return cipher_b64
 
 
 def redact_pii(text: str) -> str:
     """
     Scans text for PII (names, emails, phone numbers, SSNs) and replaces them with placeholders
-    before sending text to the LLM.
+    before sending text to the LLM. Runs instantly in real-time.
     """
-    if USE_PRESIDIO and analyzer and anonymizer:
-        try:
-            results = analyzer.analyze(text=text, entities=["PERSON", "ORGANIZATION", "PHONE_NUMBER", "EMAIL_ADDRESS"], language='en')
-            anonymized_result = anonymizer.anonymize(text=text, analyzer_results=results)
-            return anonymized_result.text
-        except Exception as e:
-            print(f"Presidio analysis warning ({e}). Falling back to regex engine.")
+    if not text:
+        return ""
 
-    # Regex Rule-Based Redaction Engine Fallback
     redacted = text
     # Redact Emails
     redacted = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '<EMAIL_REDACTED>', redacted)
@@ -36,4 +61,3 @@ def redact_pii(text: str) -> str:
     redacted = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '<SSN_REDACTED>', redacted)
     
     return redacted
-

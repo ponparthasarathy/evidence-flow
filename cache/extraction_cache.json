@@ -1,5 +1,5 @@
 {
-  "5bc4892b668b32ccb0a9888603a7c6e5": {
+  "d4d5edf7dac3adaa178af2e1a1992104": {
     "doc_type": "approval",
     "amount": 1200000,
     "date": "2024-01-15",
@@ -10,35 +10,10 @@
     "ref_number": "TND-2024-SERVER-01",
     "confidence": 0.97,
     "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\approval_vendor_b.eml",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_vendor_b.eml",
     "page_ref": 1,
     "source_snippet": "CIO approves Vendor B for the \u20b912,00,000 purchase under Tender #TND-2024-SERVER-01.",
     "summary": "CIO approval for Vendor B purchase order of \u20b912,00,000.",
-    "raw_response": {
-      "extracted_via": "deterministic_fallback"
-    }
-  },
-  "35af9ba5f2b58f3029139cb3bb26c46f": {
-    "doc_type": "invoice",
-    "amount": 600000,
-    "date": "2024-01-20",
-    "threshold_value": null,
-    "line_items": [
-      {
-        "description": "High Performance Enterprise Server - Advance (50%)",
-        "quantity": 1,
-        "amount": 600000
-      }
-    ],
-    "approver": null,
-    "vendor_name": "Vendor B Solutions",
-    "ref_number": "INV-2024-001",
-    "confidence": 0.98,
-    "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\invoice_1.pdf",
-    "page_ref": 1,
-    "source_snippet": "Invoice INV-2024-001 for PO #4521. Line item: High Performance Enterprise Server - Advance (50%), \u20b96,00,000.",
-    "summary": "Invoice INV-2024-001 for \u20b96,00,000 matching PO #4521 advance terms.",
     "raw_response": {
       "extracted_via": "deterministic_fallback"
     }
@@ -65,7 +40,7 @@
     "ref_number": "INV-2024-002",
     "confidence": 0.98,
     "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\invoice_2.pdf",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\invoice_2.pdf",
     "page_ref": 1,
     "source_snippet": "Invoice INV-2024-002 for PO #4521. Line items: Server Balance \u20b96,00,000, Premium support \u20b950,000.",
     "summary": "Invoice INV-2024-002 for \u20b96,50,000 including \u20b950,000 Premium support.",
@@ -73,7 +48,7 @@
       "extracted_via": "deterministic_fallback"
     }
   },
-  "072d5dedaf8b35b915f4e50a4854ce07": {
+  "e8c676debe596aab40d5e8072abed99f": {
     "doc_type": "policy",
     "amount": null,
     "date": "2023-02-01",
@@ -84,7 +59,7 @@
     "ref_number": null,
     "confidence": 0.99,
     "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\policy_cfo_approval.eml",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\policy_cfo_approval.eml",
     "page_ref": 1,
     "source_snippet": "Effective Feb 1, 2023, invoices above \u20b95,00,000 require CFO sign-off prior to payment disbursement.",
     "summary": "Financial policy mandating CFO approval for invoices exceeding \u20b95,00,000 effective Feb 1, 2023.",
@@ -110,7 +85,7 @@
     "ref_number": "PO #4521",
     "confidence": 0.99,
     "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\po_4521.pdf",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\po_4521.pdf",
     "page_ref": 1,
     "source_snippet": "PO Number: PO #4521 | Vendor: Vendor B Solutions | Total Amount: \u20b912,00,000 | Item: High Performance Enterprise Server",
     "summary": "Purchase Order #4521 for Vendor B Solutions totaling \u20b912,00,000.",
@@ -129,7 +104,7 @@
     "ref_number": "TND-2024-SERVER-01",
     "confidence": 0.98,
     "needs_review": false,
-    "source_path": "E:\\evidence-flow\\data\\tender_server.pdf",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\tender_server.pdf",
     "page_ref": 1,
     "source_snippet": "Approved Budget: \u20b912,00,000 (Twelve Lakh Indian Rupees) for 1 Server Unit",
     "summary": "Tender for enterprise high-performance server with budget \u20b912,00,000.",
@@ -137,7 +112,7 @@
       "extracted_via": "deterministic_fallback"
     }
   },
-  "d4d5edf7dac3adaa178af2e1a1992104": {
+  "1cb8ecd69023a37d81a5b044daf877d3": {
     "doc_type": "approval",
     "amount": 1200000,
     "date": "2024-01-15",
@@ -148,7 +123,7 @@
     "ref_number": "TND-2024-SERVER-01",
     "confidence": 0.97,
     "needs_review": false,
-    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_vendor_b.eml",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\approval_cfo_cloud_vendor_a.eml",
     "page_ref": 1,
     "source_snippet": "CIO approves Vendor B for the \u20b912,00,000 purchase under Tender #TND-2024-SERVER-01.",
     "summary": "CIO approval for Vendor B purchase order of \u20b912,00,000.",
@@ -156,7 +131,126 @@
       "extracted_via": "deterministic_fallback"
     }
   },
-  "e8c676debe596aab40d5e8072abed99f": {
+  "38cb396abda10c2fba258d6270c27ffc": {
+    "doc_type": "approval",
+    "amount": 1200000,
+    "date": "2024-01-15",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.97,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\approval_cio_server_vendor_b.eml",
+    "page_ref": 1,
+    "source_snippet": "CIO approves Vendor B for the \u20b912,00,000 purchase under Tender #TND-2024-SERVER-01.",
+    "summary": "CIO approval for Vendor B purchase order of \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "35af9ba5f2b58f3029139cb3bb26c46f": {
+    "doc_type": "invoice",
+    "amount": 600000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Advance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-001",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\invoice_1.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-001 for PO #4521. Line item: High Performance Enterprise Server - Advance (50%), \u20b96,00,000.",
+    "summary": "Invoice INV-2024-001 for \u20b96,00,000 matching PO #4521 advance terms.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "eac2907f5c051cfb0c6f6e1ccd249fe0": {
+    "doc_type": "invoice",
+    "amount": 600000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Advance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-001",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\invoice_inv_2024_001_clean.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-001 for PO #4521.",
+    "summary": "Invoice document",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback_invoice"
+    }
+  },
+  "2364be00fdcf59bb207082d6633899c0": {
+    "doc_type": "invoice",
+    "amount": 600000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Advance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-001",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\invoice_inv_2024_002_mismatch.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-001 for PO #4521.",
+    "summary": "Invoice document",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback_invoice"
+    }
+  },
+  "055ae5961c62abb2966509812e1646fd": {
+    "doc_type": "invoice",
+    "amount": 600000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server - Advance (50%)",
+        "quantity": 1,
+        "amount": 600000
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INV-2024-001",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\invoice_inv_2024_003_cloud_clean.pdf",
+    "page_ref": 1,
+    "source_snippet": "Invoice INV-2024-001 for PO #4521.",
+    "summary": "Invoice document",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback_invoice"
+    }
+  },
+  "c7c70d48c74d85f4eee974f412656f7d": {
     "doc_type": "policy",
     "amount": null,
     "date": "2023-02-01",
@@ -167,12 +261,247 @@
     "ref_number": null,
     "confidence": 0.99,
     "needs_review": false,
-    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\policy_cfo_approval.eml",
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\policy_cfo_approval_matrix.eml",
     "page_ref": 1,
     "source_snippet": "Effective Feb 1, 2023, invoices above \u20b95,00,000 require CFO sign-off prior to payment disbursement.",
     "summary": "Financial policy mandating CFO approval for invoices exceeding \u20b95,00,000 effective Feb 1, 2023.",
     "raw_response": {
       "extracted_via": "deterministic_fallback"
+    }
+  },
+  "98a8caead705a6c86bf159380f478185": {
+    "doc_type": "purchase_order",
+    "amount": 1200000,
+    "date": "2024-01-18",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server",
+        "quantity": 1,
+        "unit_price": 1200000,
+        "total_price": 1200000
+      }
+    ],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "PO #4521",
+    "confidence": 0.99,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\po_4521_enterprise_server.pdf",
+    "page_ref": 1,
+    "source_snippet": "PO Number: PO #4521 | Vendor: Vendor B Solutions | Total Amount: \u20b912,00,000 | Item: High Performance Enterprise Server",
+    "summary": "Purchase Order #4521 for Vendor B Solutions totaling \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "e1f2be8e130695c1a7a84efb21c704a6": {
+    "doc_type": "purchase_order",
+    "amount": 1200000,
+    "date": "2024-01-18",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "High Performance Enterprise Server",
+        "quantity": 1,
+        "unit_price": 1200000,
+        "total_price": 1200000
+      }
+    ],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "PO #4521",
+    "confidence": 0.99,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\po_4590_cloud_infrastructure.pdf",
+    "page_ref": 1,
+    "source_snippet": "PO Number: PO #4521 | Vendor: Vendor B Solutions | Total Amount: \u20b912,00,000 | Item: High Performance Enterprise Server",
+    "summary": "Purchase Order #4521 for Vendor B Solutions totaling \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "c835b57b5a85b88a90513fcd74140bf9": {
+    "doc_type": "decision",
+    "amount": 1200000,
+    "date": "2024-01-05",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": null,
+    "vendor_name": null,
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\tender_cloud_migration.pdf",
+    "page_ref": 1,
+    "source_snippet": "Approved Budget: \u20b912,00,000 (Twelve Lakh Indian Rupees) for 1 Server Unit",
+    "summary": "Tender for enterprise high-performance server with budget \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "0503d836a52576411e3c56e2a5695b40": {
+    "doc_type": "decision",
+    "amount": 1200000,
+    "date": "2024-01-05",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": null,
+    "vendor_name": null,
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.98,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\data\\tender_server_acquisition.pdf",
+    "page_ref": 1,
+    "source_snippet": "Approved Budget: \u20b912,00,000 (Twelve Lakh Indian Rupees) for 1 Server Unit",
+    "summary": "Tender for enterprise high-performance server with budget \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "43767c6ea7e5df4fd287684f1ba58f14": {
+    "doc_type": "purchase_order",
+    "amount": 2500000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "In accordance with the financial policy requiring CFO sign-off for expenditures ",
+        "amount": 500000,
+        "quantity": 1
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "TND-2024-CLOUD-02",
+    "confidence": 0.96,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_cfo_cloud_vendor_a.eml",
+    "page_ref": 1,
+    "source_snippet": "From: Chief Financial Officer <cfo@acme-enterprise.com> To: Procurement Office <procurement@acme-enterprise.com> Subject: Executive CFO Approval: Cloud Migration Tender #TND-2024-CLOUD-02 Date: Thu, 1",
+    "summary": "Extracted Purchase Order from approval_cfo_cloud_vendor_a.eml (Ref: TND-2024-CLOUD-02, Amount: \u20b92,500,000).",
+    "raw_response": {
+      "extracted_via": "dynamic_nlp_extraction"
+    }
+  },
+  "8a2e072e663184f1cf9630a86da473a1": {
+    "doc_type": "purchase_order",
+    "amount": 1200000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "Subject: Executive Approval: IT Server Tender - Vendor B Selection",
+        "amount": 1200000,
+        "quantity": 1
+      },
+      {
+        "description": "Based on the technical and financial evaluation of Tender #TND-2024-SERVER-01, C",
+        "amount": 2024,
+        "quantity": 1
+      },
+      {
+        "description": "Please issue Purchase Order #4521 to Vendor B Solutions for \u20b912,00,000 under the",
+        "amount": 4521,
+        "quantity": 1
+      }
+    ],
+    "approver": null,
+    "vendor_name": "B Selection",
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.96,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_cio_server_vendor_b.eml",
+    "page_ref": 1,
+    "source_snippet": "From: Chief Information Officer <cio@acme-enterprise.com> To: Procurement Office <procurement@acme-enterprise.com> Subject: Executive Approval: IT Server Tender - Vendor B Selection Date: Mon, 15 Jan ",
+    "summary": "Extracted Purchase Order from approval_cio_server_vendor_b.eml (Ref: TND-2024-SERVER-01, Amount: \u20b91,200,000).",
+    "raw_response": {
+      "extracted_via": "dynamic_nlp_extraction"
+    }
+  },
+  "ad5c1de4f6cdbb908a1b44b7432d92ad": {
+    "doc_type": "purchase_order",
+    "amount": 1200000,
+    "date": "2024-01-20",
+    "threshold_value": null,
+    "line_items": [
+      {
+        "description": "Subject: Approval: IT Server Tender - Vendor B Selection",
+        "amount": 1200000,
+        "quantity": 1
+      },
+      {
+        "description": "Based on the evaluation of Tender #TND-2024-SERVER-01, CIO approves Vendor B for",
+        "amount": 2024,
+        "quantity": 1
+      },
+      {
+        "description": "Please issue Purchase Order #4521 to Vendor B Solutions for \u20b912,00,000 under the",
+        "amount": 4521,
+        "quantity": 1
+      }
+    ],
+    "approver": null,
+    "vendor_name": "B Selection",
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.96,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_vendor_b.eml",
+    "page_ref": 1,
+    "source_snippet": "From: Chief Information Officer <cio@enterprise.com> To: Procurement Office <procurement@enterprise.com> Subject: Approval: IT Server Tender - Vendor B Selection Date: Mon, 15 Jan 2024 14:30:00 +0530 ",
+    "summary": "Extracted Purchase Order from approval_vendor_b.eml (Ref: TND-2024-SERVER-01, Amount: \u20b91,200,000).",
+    "raw_response": {
+      "extracted_via": "dynamic_nlp_extraction"
+    }
+  },
+  "e51ebc5af55fa0b70bf9d1dd705ced8c": {
+    "doc_type": "policy",
+    "amount": 500000,
+    "date": "2023-02-01",
+    "threshold_value": 500000,
+    "line_items": [
+      {
+        "description": "Scope item per policy_cfo_approval.eml",
+        "amount": 500000,
+        "quantity": 1
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INVOICES",
+    "confidence": 0.96,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\policy_cfo_approval.eml",
+    "page_ref": 1,
+    "source_snippet": "From: Finance Policy Desk <policy@enterprise.com> To: All Department Heads <mgmt@enterprise.com> Subject: Updated Financial Approval Matrix & Policy Date: Wed, 1 Feb 2023 09:00:00 +0530  Dear Manageme",
+    "summary": "Extracted Invoice from policy_cfo_approval.eml (Ref: INVOICES, Amount: \u20b9500,000).",
+    "raw_response": {
+      "extracted_via": "dynamic_nlp_extraction"
+    }
+  },
+  "3eeba3fc534bbc3e1802aa1329b5958d": {
+    "doc_type": "policy",
+    "amount": 500000,
+    "date": "2023-02-01",
+    "threshold_value": 500000,
+    "line_items": [
+      {
+        "description": "Scope item per policy_cfo_approval_matrix.eml",
+        "amount": 500000,
+        "quantity": 1
+      }
+    ],
+    "approver": null,
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "INVOICES",
+    "confidence": 0.96,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\policy_cfo_approval_matrix.eml",
+    "page_ref": 1,
+    "source_snippet": "From: Finance Policy Governance <governance@acme-enterprise.com> To: All Department Heads & Engineering Leadership <mgmt@acme-enterprise.com> Subject: Official Financial Approval Matrix & CFO Spending",
+    "summary": "Extracted Invoice from policy_cfo_approval_matrix.eml (Ref: INVOICES, Amount: \u20b9500,000).",
+    "raw_response": {
+      "extracted_via": "dynamic_nlp_extraction"
     }
   }
 }

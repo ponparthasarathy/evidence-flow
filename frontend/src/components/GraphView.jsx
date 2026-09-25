@@ -15,11 +15,28 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
 
     const nodes = graphData.nodes.map(n => {
       const isHighlighted = highlightedPath && highlightedPath.nodes.includes(n.id);
+      const props = n.properties || {};
+      const status = props.status || 'PASSED';
+      const timestamp = props.date || props.timestamp || '';
+      
+      let customLabel = n.label || n.id;
+      if (n.type === 'Commit') {
+        const hash = props.commit_hash || n.id.replace('Commit_', '');
+        const shortHash = hash.slice(0, 8);
+        const timeStr = timestamp ? `\n${timestamp}` : '';
+        if (status === 'PASSED') {
+          customLabel = `Commit_${shortHash}\n[✓ VALID]${timeStr}`;
+        } else {
+          customLabel = `Commit_${shortHash}\n[✖ INVALID: BLOCKED]${timeStr}`;
+        }
+      }
+
       return {
         data: {
           id: n.id,
-          label: n.label || n.id,
+          label: customLabel,
           type: n.type,
+          commitStatus: status,
           isHighlighted: isHighlighted ? 'true' : 'false'
         }
       };
@@ -48,7 +65,7 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
         'label': 'data(label)',
         'color': '#37352F',
         'background-color': '#FFFFFF',
-        'font-size': '12px',
+        'font-size': '11px',
         'font-family': 'Inter, sans-serif',
         'font-weight': '600',
         'text-valign': 'center',
@@ -63,7 +80,7 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
         'shadow-opacity': 1,
         'shadow-offset-y': 4,
         'text-wrap': 'wrap',
-        'text-max-width': '140px',
+        'text-max-width': '160px',
         'transition-property': 'background-color, border-color, shadow-color, shadow-opacity',
         'transition-duration': '0.3s'
       }
@@ -94,7 +111,11 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
     },
     {
       selector: 'node[type = "Commit"]',
-      style: { 'border-color': '#787774', 'border-width': '2.5px', 'shape': 'ellipse', 'border-style': 'dashed' }
+      style: { 'border-color': '#16A34A', 'border-width': '2.5px', 'shape': 'ellipse', 'border-style': 'dashed', 'background-color': '#F0FDF4', 'color': '#15803D' }
+    },
+    {
+      selector: 'node[type = "Commit"][commitStatus = "BLOCKED"]',
+      style: { 'border-color': '#DC2626', 'border-width': '3px', 'shape': 'ellipse', 'border-style': 'solid', 'background-color': '#FEF2F2', 'color': '#991B1B' }
     },
     {
       selector: 'node[type = "Document"]',

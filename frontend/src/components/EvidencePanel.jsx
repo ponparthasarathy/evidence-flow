@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileText, AlertTriangle, CheckCircle, Code, GitCommit, UserCheck, Eye } from 'lucide-react';
 
-export default function EvidencePanel({ selectedNode, evidenceData, queryResult, activeQuery }) {
+export default function EvidencePanel({ selectedNode, evidenceData, queryResult, activeQuery, currentUser }) {
   return (
     <div className="flat-panel" style={{ height: '100%', padding: '20px', overflowY: 'auto' }}>
       <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -16,15 +16,45 @@ export default function EvidencePanel({ selectedNode, evidenceData, queryResult,
               {activeQuery === 'extra' && 'Query 1: Extra Line Items'}
               {activeQuery === 'drift' && 'Query 2: Policy Drift & Git Forensics'}
               {activeQuery === 'counterfactual' && 'What-If Counterfactual Simulation'}
+              {activeQuery === 'nl' && '⚡ Text-to-Cypher / Text-to-SQL Query'}
             </span>
             <span className={queryResult.needs_review || activeQuery === 'counterfactual' ? 'badge badge-red' : 'badge badge-green'}>
-              {activeQuery === 'counterfactual' ? `Hypothetical Threshold ₹${queryResult.hypothetical_threshold?.toLocaleString()}` : (queryResult.needs_review ? 'Flagged for Review' : 'Verified')}
+              {activeQuery === 'counterfactual' ? `Hypothetical Threshold ₹${queryResult.hypothetical_threshold?.toLocaleString()}` : (queryResult.needs_review ? 'Flagged for Review' : `Confidence ${(queryResult.confidence * 100).toFixed(0)}%`)}
             </span>
           </div>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: '12px', lineHeight: 1.4 }}>
             {queryResult.summary}
           </p>
+
+          {/* Text-to-Cypher & Text-to-SQL Generated Queries */}
+          {activeQuery === 'nl' && (
+            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {queryResult.explanation && (
+                <div style={{ padding: '8px 10px', borderRadius: '4px', background: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: '0.8rem', color: '#1E40AF', lineHeight: 1.4 }}>
+                  <strong>Interpretation:</strong> {queryResult.explanation}
+                </div>
+              )}
+
+              {queryResult.cypher && (
+                <div style={{ borderRadius: '4px', border: '1px solid var(--border-color)', background: '#1E1E1E', color: '#D4D4D4', padding: '10px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', color: '#9CDCFE', fontWeight: 600 }}>
+                    <span>Generated Cypher Query (Neo4j):</span>
+                  </div>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{queryResult.cypher}</pre>
+                </div>
+              )}
+
+              {queryResult.sql && (
+                <div style={{ borderRadius: '4px', border: '1px solid var(--border-color)', background: '#1E1E1E', color: '#D4D4D4', padding: '10px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', color: '#4EC9B0', fontWeight: 600 }}>
+                    <span>Generated DuckDB SQL Query:</span>
+                  </div>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{queryResult.sql}</pre>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Findings */}
           <div style={{ marginTop: '12px' }}>
@@ -71,6 +101,16 @@ export default function EvidencePanel({ selectedNode, evidenceData, queryResult,
                     </div>
                   </div>
                 )}
+
+                {activeQuery === 'nl' && (
+                  <div>
+                    {finding.invoice_number && <div><strong>Invoice Ref:</strong> {finding.invoice_number}</div>}
+                    {finding.amount && <div><strong>Amount:</strong> ₹{finding.amount?.toLocaleString()}</div>}
+                    {finding.approved_by && <div><strong>Approved By:</strong> {finding.approved_by}</div>}
+                    {finding.code_function && <div><strong>Code Function:</strong> <code>{finding.code_function}</code></div>}
+                    {finding.status && <div style={{ color: 'var(--accent-primary)', fontWeight: 600, marginTop: '2px' }}>Status: {finding.status}</div>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -82,51 +122,92 @@ export default function EvidencePanel({ selectedNode, evidenceData, queryResult,
                 <Eye size={14} color="var(--accent-primary)" />
                 PDF Visual Bounding-Box Evidence
               </h4>
-              {queryResult.evidence.map((ev, idx) => (
-                <div key={idx} style={{ padding: '12px', borderRadius: '6px', background: 'var(--bg-card)', fontSize: '0.8rem', marginBottom: '10px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ color: 'var(--accent-primary)', fontWeight: 600, marginBottom: '6px' }}>
-                    📄 Document: {ev.file} (Page {ev.page})
-                  </div>
-                  
-                  {/* Visual PDF Page Preview with Red Highlight Bounding Box */}
-                  <div style={{
-                    width: '100%',
-                    height: '110px',
-                    background: '#FFFFFF',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '4px',
-                    position: 'relative',
-                    padding: '8px',
-                    boxShadow: 'inset 0 0 4px rgba(0,0,0,0.05)',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{ fontSize: '0.65rem', color: '#999', lineHeight: 1.3 }}>
-                      CONFIDENTIAL FINANCIAL RECORD -- AUDIT EVIDENCE SHEET
-                      <br />DOCUMENT REF: {ev.file} | PAGE {ev.page}
-                      <br />---------------------------------------------------
+              {queryResult.evidence.map((ev, idx) => {
+                const cleanFileName = ev.file ? ev.file.split(/[/\\]/).pop() : 'Document';
+                return (
+                  <div key={idx} style={{ padding: '12px', borderRadius: '6px', background: 'var(--bg-card)', fontSize: '0.8rem', marginBottom: '10px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--accent-primary)', fontWeight: 600, marginBottom: '8px', wordBreak: 'break-word' }} title={ev.file}>
+                      📄 Document: <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{cleanFileName}</span> (Page {ev.page})
                     </div>
                     
-                    {/* Red Highlight Bounding Box Box */}
+                    {/* Visual PDF Page Preview Card */}
                     <div style={{
-                      position: 'absolute',
-                      top: '45px',
-                      left: '8px',
-                      right: '8px',
-                      padding: '4px 6px',
-                      border: '2px solid #BC0202',
-                      background: 'rgba(188, 2, 2, 0.12)',
-                      borderRadius: '2px',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      color: '#BC0202'
+                      width: '100%',
+                      background: '#FFFFFF',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '6px',
+                      padding: '10px 12px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
                     }}>
-                      [BBOX x0:45 y0:120] "{ev.snippet}"
+                      <div style={{ fontSize: '0.68rem', color: '#64748B', lineHeight: 1.4, fontFamily: 'monospace', borderBottom: '1px dashed #E2E8F0', paddingBottom: '6px' }}>
+                        <div><strong>CONFIDENTIAL FINANCIAL RECORD</strong> -- AUDIT EVIDENCE SHEET</div>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>REF: {cleanFileName} | PAGE {ev.page}</div>
+                      </div>
+                      
+                      {/* Red Highlight Bounding Box Card */}
+                      <div style={{
+                        padding: '8px 10px',
+                        border: '2px solid #BC0202',
+                        background: 'rgba(188, 2, 2, 0.08)',
+                        borderRadius: '4px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        color: '#BC0202',
+                        lineHeight: 1.4,
+                        wordBreak: 'break-word'
+                      }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.8, marginBottom: '2px' }}>[BBOX x0:45 y0:120]</div>
+                        "{ev.snippet}"
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
+
+          {/* Confirm Finding Sign-off Scope */}
+          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Confirm Finding Sign-Off Scope:
+            </div>
+            {['Admin', 'Auditor'].includes(currentUser?.role || 'Admin') ? (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/findings/confirm', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Role': currentUser?.role || 'Auditor'
+                      },
+                      body: JSON.stringify({
+                        finding_id: 'FINDING-001',
+                        notes: `Confirmed by ${currentUser?.name} (${currentUser?.role})`,
+                        confirmed_by: currentUser?.name
+                      })
+                    });
+                    if (res.ok) {
+                      alert(`Finding confirmed by ${currentUser?.name} (${currentUser?.role})! Sign-off logged.`);
+                    }
+                  } catch (err) {
+                    console.error("Confirmation error:", err);
+                  }
+                }}
+                className="btn-primary"
+                style={{ width: '100%', padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <CheckCircle size={15} /> Confirm Audit Finding
+              </button>
+            ) : (
+              <div style={{ fontSize: '0.78rem', padding: '8px 12px', borderRadius: '4px', background: 'rgba(224,62,62,0.08)', color: 'var(--accent-danger)', fontWeight: 600, textAlign: 'center' }}>
+                🔒 Confirm Finding Disabled (Requires Auditor / Admin)
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -145,8 +226,8 @@ export default function EvidencePanel({ selectedNode, evidenceData, queryResult,
               <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
                 Primary Evidence Trace:
               </div>
-              <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Path: {evidenceData.file_path} (Ref: Page/Line {evidenceData.page_ref})
+              <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginBottom: '6px', wordBreak: 'break-word' }} title={evidenceData.file_path}>
+                Path: <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{evidenceData.file_path ? evidenceData.file_path.split(/[/\\]/).pop() : 'Evidence File'}</span> (Ref: Page/Line {evidenceData.page_ref})
               </div>
               {evidenceData.source_snippet && (
                 <div style={{
@@ -176,4 +257,3 @@ export default function EvidencePanel({ selectedNode, evidenceData, queryResult,
     </div>
   );
 }
-

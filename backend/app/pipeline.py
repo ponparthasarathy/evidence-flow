@@ -42,13 +42,30 @@ def get_pipeline_status() -> Dict[str, Any]:
     PIPELINE_STATUS["total_edges"] = len(edges)
     return PIPELINE_STATUS
 
-def run_pipeline(sovereign_mode: bool = False) -> Dict[str, Any]:
+def clone_or_update_repo(git_url: str, target_dir: str):
+    if not git_url:
+        return
+    try:
+        if os.path.exists(target_dir) and os.path.exists(os.path.join(target_dir, ".git")):
+            try:
+                repo = git.Repo(target_dir)
+                repo.remotes.origin.pull()
+            except Exception:
+                pass
+        else:
+            os.makedirs(os.path.dirname(target_dir), exist_ok=True)
+            git.Repo.clone_from(git_url, target_dir)
+    except Exception as e:
+        print(f"Git clone notice: {e}")
+
+def run_pipeline(sovereign_mode: bool = False, git_url: str = None) -> Dict[str, Any]:
     """
     Executes the full pipeline:
-    1. Ingest files from settings.DATA_DIR
-    2. Extract facts using LLM / disk cache (with sovereign_mode check)
-    3. Analyze code using tree-sitter & GitPython forensics
-    4. Load everything into Neo4j graph store, DuckDB analytics, and Qdrant vector store
+    1. Clone/update Git repository if provided
+    2. Ingest files from settings.DATA_DIR
+    3. Extract facts using Gemini / Ollama (with sovereign_mode check)
+    4. Analyze code using tree-sitter & GitPython forensics
+    5. Load everything into Neo4j graph store, DuckDB analytics, and Qdrant vector store
     """
     global PIPELINE_STATUS
     trace_id = f"ef-trace-{uuid.uuid4().hex[:12]}"
@@ -62,6 +79,13 @@ def run_pipeline(sovereign_mode: bool = False) -> Dict[str, Any]:
     })
 
     try:
+        # Step 0: Clone Git Repository if URL provided
+        if git_url:
+            PIPELINE_STATUS.update({
+                "current_step": f"Cloning repository {git_url}..."
+            })
+            clone_or_update_repo(git_url, settings.REPO_DIR)
+
         # Step 1: Document Ingestion
         pages = ingest_data_dir(settings.DATA_DIR)
         PIPELINE_STATUS.update({

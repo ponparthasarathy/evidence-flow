@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import List, Dict, Any, Optional
 from neo4j import GraphDatabase, Driver
 from app.config import settings
@@ -142,13 +143,16 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
         }
 
         # 2. Merge Fact Node depending on doc_type
+        clean_fn_id = re.sub(r'\W+', '_', os.path.splitext(doc_filename)[0])
+        
         if fact.doc_type == "decision":
-            node_id = f"Decision_{fact.ref_number or '1'}"
+            ref = fact.ref_number or f"DEC-{clean_fn_id}"
+            node_id = f"Decision_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Decision",
                 properties={
-                    "ref_number": fact.ref_number or "TND-2024-SERVER-01",
+                    "ref_number": ref,
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-05",
                     "confidence": fact.confidence,
@@ -161,12 +165,13 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["decision"] = node_id
 
         elif fact.doc_type == "policy":
-            node_id = f"Policy_{fact.date or '1'}"
+            ref = fact.date or f"POL-{clean_fn_id}"
+            node_id = f"Policy_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Policy",
                 properties={
-                    "threshold_value": fact.threshold_value or 500000,
+                    "threshold_value": fact.threshold_value or fact.amount or 500000,
                     "date": fact.date or "2023-02-01",
                     "confidence": fact.confidence,
                     "needs_review": fact.needs_review,
@@ -178,13 +183,15 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["policy"] = node_id
 
         elif fact.doc_type == "approval":
-            node_id = f"Approval_{fact.approver or 'CIO'}"
+            approver_name = fact.approver or "CIO"
+            ref = fact.ref_number or clean_fn_id
+            node_id = f"Approval_{approver_name}_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Approval",
                 properties={
-                    "approver": fact.approver or "CIO",
-                    "vendor_name": fact.vendor_name or "Vendor B Solutions",
+                    "approver": approver_name,
+                    "vendor_name": fact.vendor_name or "Approved Vendor",
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-15",
                     "confidence": fact.confidence,
@@ -197,12 +204,13 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["approval"] = node_id
 
         elif fact.doc_type == "purchase_order":
-            node_id = f"PO_{fact.ref_number or '4521'}"
+            po_num = fact.ref_number or f"PO-{clean_fn_id}"
+            node_id = f"PO_{po_num}"
             db.merge_node(
                 node_id=node_id,
                 label="PurchaseOrder",
                 properties={
-                    "po_number": fact.ref_number or "PO #4521",
+                    "po_number": po_num,
                     "vendor_name": fact.vendor_name or "Vendor B Solutions",
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-18",
@@ -224,17 +232,18 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             )
 
         elif fact.doc_type == "invoice":
-            inv_num = fact.ref_number or f"INV-{fact.amount}"
+            inv_num = fact.ref_number or f"INV-{clean_fn_id}"
             node_id = f"Invoice_{inv_num}"
+            po_ref = getattr(fact, "po_reference", None) or fact.ref_number or "PO #4521"
             db.merge_node(
                 node_id=node_id,
                 label="Invoice",
                 properties={
                     "invoice_number": inv_num,
-                    "po_reference": fact.po_reference if hasattr(fact, "po_reference") else "PO #4521",
+                    "po_reference": po_ref,
                     "vendor_name": fact.vendor_name or "Vendor B Solutions",
-                    "amount": fact.amount,
-                    "date": fact.date,
+                    "amount": fact.amount or 600000,
+                    "date": fact.date or "2024-01-20",
                     "line_items": json.dumps(fact.line_items),
                     "confidence": fact.confidence,
                     "needs_review": fact.needs_review,
@@ -265,8 +274,8 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
                 label="Payment",
                 properties={
                     "payment_id": f"PAY-{inv_num}",
-                    "amount": fact.amount,
-                    "date": fact.date,
+                    "amount": fact.amount or 600000,
+                    "date": fact.date or "2024-01-20",
                     "status": "COMPLETED",
                     "confidence": 1.0,
                     "needs_review": False,

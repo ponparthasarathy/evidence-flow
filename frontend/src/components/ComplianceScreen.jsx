@@ -135,17 +135,28 @@ export default function ComplianceScreen() {
         <div className="flat-panel" style={{
           padding: '24px',
           borderLeft: webhookResult.status === 'BLOCKED' ? '6px solid var(--accent-primary)' : '6px solid var(--accent-success)',
-          background: webhookResult.status === 'BLOCKED' ? 'rgba(188, 2, 2, 0.02)' : 'rgba(46, 117, 89, 0.02)'
+          background: webhookResult.status === 'BLOCKED' ? 'rgba(188, 2, 2, 0.02)' : 'rgba(46, 117, 89, 0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            {webhookResult.status === 'BLOCKED' ? (
-              <AlertTriangle size={24} color="var(--accent-primary)" />
-            ) : (
-              <CheckCircle2 size={24} color="var(--accent-success)" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {webhookResult.status === 'BLOCKED' ? (
+                <AlertTriangle size={24} color="var(--accent-primary)" />
+              ) : (
+                <CheckCircle2 size={24} color="var(--accent-success)" />
+              )}
+              <span style={{ fontSize: '1.2rem', fontWeight: 700, color: webhookResult.status === 'BLOCKED' ? 'var(--accent-primary)' : 'var(--accent-success)' }}>
+                CI/CD Status: {webhookResult.status} ({webhookResult.action})
+              </span>
+            </div>
+
+            {webhookResult.real_commit && (
+              <span className="badge badge-green" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
+                {webhookResult.real_commit.push_status}
+              </span>
             )}
-            <span style={{ fontSize: '1.2rem', fontWeight: 700, color: webhookResult.status === 'BLOCKED' ? 'var(--accent-primary)' : 'var(--accent-success)' }}>
-              CI/CD Status: {webhookResult.status} ({webhookResult.action})
-            </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
@@ -155,7 +166,41 @@ export default function ComplianceScreen() {
                 <strong>Required Gate:</strong> {webhookResult.required_approval}
               </div>
             )}
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '8px' }}>
+            
+            {/* Real Git Commit Details Box */}
+            {webhookResult.real_commit && (
+              <div style={{
+                marginTop: '12px',
+                padding: '12px 16px',
+                background: '#FFFFFF',
+                borderRadius: '6px',
+                border: '1px solid var(--border-color)',
+                fontSize: '0.85rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Git Commit Lineage Record</span>
+                  <a 
+                    href={webhookResult.real_commit.commit_url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    style={{ color: 'var(--accent-primary)', fontWeight: 600, fontFamily: 'monospace', textDecoration: 'underline' }}
+                  >
+                    Commit {webhookResult.real_commit.commit_hash} ↗
+                  </a>
+                </div>
+                <div style={{ color: 'var(--text-secondary)' }}>
+                  <strong>Author:</strong> {webhookResult.real_commit.author} &bull; <strong>Repo:</strong> <code style={{ fontSize: '0.8rem' }}>codite-team/evidence-flow-commit</code>
+                </div>
+                <div style={{ fontFamily: 'monospace', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  Commit Message: "{webhookResult.real_commit.commit_message}"
+                </div>
+              </div>
+            )}
+
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '4px' }}>
               Target File: {webhookResult.file}
             </div>
           </div>
