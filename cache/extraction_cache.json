@@ -136,5 +136,43 @@
     "raw_response": {
       "extracted_via": "deterministic_fallback"
     }
+  },
+  "d4d5edf7dac3adaa178af2e1a1992104": {
+    "doc_type": "approval",
+    "amount": 1200000,
+    "date": "2024-01-15",
+    "threshold_value": null,
+    "line_items": [],
+    "approver": "CIO",
+    "vendor_name": "Vendor B Solutions",
+    "ref_number": "TND-2024-SERVER-01",
+    "confidence": 0.97,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\approval_vendor_b.eml",
+    "page_ref": 1,
+    "source_snippet": "CIO approves Vendor B for the \u20b912,00,000 purchase under Tender #TND-2024-SERVER-01.",
+    "summary": "CIO approval for Vendor B purchase order of \u20b912,00,000.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
+  },
+  "e8c676debe596aab40d5e8072abed99f": {
+    "doc_type": "policy",
+    "amount": null,
+    "date": "2023-02-01",
+    "threshold_value": 500000,
+    "line_items": [],
+    "approver": null,
+    "vendor_name": null,
+    "ref_number": null,
+    "confidence": 0.99,
+    "needs_review": false,
+    "source_path": "C:\\Users\\navin\\Desktop\\evidence-flow\\data\\policy_cfo_approval.eml",
+    "page_ref": 1,
+    "source_snippet": "Effective Feb 1, 2023, invoices above \u20b95,00,000 require CFO sign-off prior to payment disbursement.",
+    "summary": "Financial policy mandating CFO approval for invoices exceeding \u20b95,00,000 effective Feb 1, 2023.",
+    "raw_response": {
+      "extracted_via": "deterministic_fallback"
+    }
   }
 }

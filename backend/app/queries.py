@@ -90,6 +90,11 @@ def query_policy_drift() -> Dict[str, Any]:
             commit_props = commit_node.get("properties", {})
             commit_date = commit_props.get("date", "2022-03-10")
 
+            devs = db.get_all_nodes("Developer")
+            dev_node = devs[0] if devs else {}
+            dev_props = dev_node.get("properties", {})
+            author_name = dev_props.get("name") or commit_props.get("author", "Jane Developer")
+
             if policy_thresh is not None and code_thresh is not None and policy_thresh != code_thresh:
                 # Compare dates
                 is_stale = False
@@ -105,6 +110,8 @@ def query_policy_drift() -> Dict[str, Any]:
                     "code_function": func_props.get("function_name", "process_vendor_payment"),
                     "code_threshold_name": code_const_name,
                     "code_threshold_value": code_thresh,
+                    "last_commit_hash": commit_props.get("commit_hash", "a1b2c3d4"),
+                    "last_commit_author": author_name,
                     "last_commit_date": commit_date,
                     "last_commit_message": commit_props.get("message", "Set CFO approval threshold per finance policy"),
                     "drift_status": drift_msg
@@ -133,6 +140,60 @@ def query_policy_drift() -> Dict[str, Any]:
         "confidence": 0.99,
         "needs_review": False
     }
+
+
+def query_counterfactual(new_threshold: int) -> Dict[str, Any]:
+    """
+    Counterfactual Query ('What If'):
+    Evaluates historical payments/invoices against a hypothetical new threshold value,
+    identifying payments that would have required additional executive sign-off under the new policy.
+    """
+    invoices = db.get_all_nodes("Invoice")
+    approvals = db.get_all_nodes("Approval")
+    
+    findings = []
+    evidence = []
+    
+    current_policy_threshold = 500000
+    
+    for inv in invoices:
+        props = inv.get("properties", {})
+        amt = props.get("amount", 0)
+        inv_num = props.get("invoice_number", "INV-UNKNOWN")
+        vendor = props.get("vendor_name", "Vendor")
+        
+        # Check if amount exceeds hypothetical new threshold
+        if amt > new_threshold:
+            would_require_cfo = amt > new_threshold
+            bypassed_under_old = amt <= current_policy_threshold
+            
+            findings.append({
+                "invoice_number": inv_num,
+                "vendor_name": vendor,
+                "amount": amt,
+                "date": props.get("date", "2024-01-20"),
+                "hypothetical_threshold": new_threshold,
+                "requires_cfo_approval": would_require_cfo,
+                "previously_bypassed": bypassed_under_old,
+                "risk_status": "FLAGGED_FOR_CFO_REVIEW" if would_require_cfo else "COMPLIANT"
+            })
+            
+            evidence.append({
+                "file": inv.get("evidence", {}).get("source_path") or props.get("evidence_file", ""),
+                "page": inv.get("evidence", {}).get("page_ref") or props.get("evidence_page", 1),
+                "snippet": inv.get("evidence", {}).get("source_snippet") or props.get("evidence_snippet", "")
+            })
+            
+    summary = f"What-If Simulation: Evaluated {len(invoices)} invoice(s) against new threshold ₹{new_threshold:,}. Flagged {len(findings)} transaction(s) requiring sign-off."
+    
+    return {
+        "summary": summary,
+        "hypothetical_threshold": new_threshold,
+        "findings": findings,
+        "evidence": evidence,
+        "confidence": 0.98
+    }
+
 
 
 def get_full_graph() -> Dict[str, Any]:

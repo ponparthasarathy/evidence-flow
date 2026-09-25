@@ -50,90 +50,107 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
         'background-color': '#FFFFFF',
         'font-size': '12px',
         'font-family': 'Inter, sans-serif',
-        'font-weight': '500',
+        'font-weight': '600',
         'text-valign': 'center',
         'text-halign': 'center',
         'width': 'label',
-        'height': '32px',
-        'padding': '12px',
-        'border-width': '1px',
+        'height': 'label',
+        'padding': '16px',
+        'border-width': '1.5px',
         'border-color': '#E9E9E7',
-        'transition-property': 'background-color, border-color',
+        'shadow-blur': 12,
+        'shadow-color': 'rgba(15, 15, 15, 0.1)',
+        'shadow-opacity': 1,
+        'shadow-offset-y': 4,
+        'text-wrap': 'wrap',
+        'text-max-width': '140px',
+        'transition-property': 'background-color, border-color, shadow-color, shadow-opacity',
         'transition-duration': '0.3s'
       }
     },
     {
       selector: 'node[type = "Decision"]',
-      style: { 'border-color': '#0284C7', 'border-width': '2px', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#0284C7', 'border-width': '2.5px', 'shape': 'round-rectangle', 'border-style': 'solid' }
     },
     {
       selector: 'node[type = "Approval"]',
-      style: { 'border-color': '#2563EB', 'border-width': '2px', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#2563EB', 'border-width': '2.5px', 'shape': 'round-rectangle', 'border-style': 'solid' }
     },
     {
       selector: 'node[type = "PurchaseOrder"]',
-      style: { 'border-color': '#0F7B6C', 'border-width': '2px', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#0F7B6C', 'border-width': '2.5px', 'shape': 'round-rectangle', 'border-style': 'solid' }
     },
     {
       selector: 'node[type = "Invoice"]',
-      style: { 'border-color': '#D9730D', 'border-width': '2px', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#D9730D', 'border-width': '2.5px', 'shape': 'round-rectangle', 'border-style': 'solid' }
     },
     {
       selector: 'node[type = "Payment"]',
-      style: { 'border-color': '#A855F7', 'border-width': '2px', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#A855F7', 'border-width': '2.5px', 'shape': 'round-rectangle', 'border-style': 'solid' }
     },
     {
       selector: 'node[type = "CodeFunction"]',
-      style: { 'border-color': '#0D9488', 'border-width': '2px', 'shape': 'rectangle', 'background-color': '#F7F7F5' }
+      style: { 'border-color': '#0D9488', 'border-width': '2.5px', 'shape': 'cut-rectangle', 'background-color': '#F7F7F5' }
     },
     {
       selector: 'node[type = "Commit"]',
-      style: { 'border-color': '#787774', 'border-width': '2px', 'shape': 'ellipse' }
+      style: { 'border-color': '#787774', 'border-width': '2.5px', 'shape': 'ellipse', 'border-style': 'dashed' }
     },
     {
       selector: 'node[type = "Document"]',
-      style: { 'border-color': '#787774', 'border-width': '2px', 'shape': 'barrel' }
+      style: { 'border-color': '#787774', 'border-width': '2.5px', 'shape': 'barrel' }
     },
     {
       selector: 'node[isHighlighted = "true"]',
       style: {
         'border-color': '#BC0202',
         'border-width': '3px',
-        'background-color': '#FDF2F2',
+        'background-color': '#FFF5F5',
         'color': '#BC0202',
-        'font-weight': '600'
+        'shadow-color': 'rgba(188, 2, 2, 0.25)',
+        'shadow-blur': 16,
+        'shadow-offset-y': 6,
+        'z-index': 10
       }
     },
     {
       selector: 'node:selected',
       style: {
         'border-color': '#37352F',
-        'border-width': '3px'
+        'border-width': '3px',
+        'shadow-color': 'rgba(55, 53, 47, 0.2)',
+        'z-index': 10
       }
     },
     {
       selector: 'edge',
       style: {
-        'width': 2,
+        'width': 2.5,
         'line-color': '#E9E9E7',
         'target-arrow-color': '#E9E9E7',
         'target-arrow-shape': 'triangle',
         'curve-style': 'bezier',
         'label': 'data(label)',
         'font-size': '10px',
-        'color': '#787774',
+        'font-weight': '500',
+        'color': '#9B9A97',
         'text-rotation': 'autorotate',
-        'text-margin-y': -8
+        'text-margin-y': -12,
+        'text-background-color': '#FFFFFF',
+        'text-background-opacity': 0.8,
+        'text-background-padding': '4px',
+        'text-background-shape': 'roundrectangle'
       }
     },
     {
       selector: 'edge[isHighlighted = "true"]',
       style: {
-        'width': 3,
+        'width': 3.5,
         'line-color': '#BC0202',
         'target-arrow-color': '#BC0202',
         'color': '#BC0202',
-        'font-weight': '600'
+        'font-weight': '700',
+        'z-index': 9
       }
     }
   ];
@@ -141,9 +158,11 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
   const layout = {
     name: 'dagre',
     rankDir: 'LR',
-    nodeSep: 60,
-    rankSep: 120,
-    padding: 30
+    nodeSep: 80,
+    rankSep: 160,
+    padding: 60,
+    animate: true,
+    animationDuration: 500
   };
 
   useEffect(() => {
@@ -155,7 +174,13 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
   }, [elements]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ 
+      width: '100%', 
+      height: '100%', 
+      position: 'relative',
+      backgroundSize: '24px 24px',
+      backgroundImage: 'radial-gradient(circle, #E6E6E6 1px, transparent 1px)'
+    }}>
       <CytoscapeComponent
         elements={elements}
         style={{ width: '100%', height: '100%' }}

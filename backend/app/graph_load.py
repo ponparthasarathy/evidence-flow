@@ -3,6 +3,8 @@ import json
 from typing import List, Dict, Any, Optional
 from neo4j import GraphDatabase, Driver
 from app.config import settings
+from app.analytics import insert_spend_fact
+from app.vector_store import upsert_document_chunk
 
 class GraphStore:
     """
@@ -214,6 +216,13 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             db.merge_relationship(node_id, "EVIDENCED_BY", doc_id)
             fact_nodes_by_type["purchase_order"] = node_id
 
+            # Index into Qdrant vector store
+            upsert_document_chunk(
+                chunk_id=doc_id,
+                text=f"{fact.summary} {fact.source_snippet}",
+                payload={"file_name": doc_filename, "doc_type": fact.doc_type, "summary": fact.summary}
+            )
+
         elif fact.doc_type == "invoice":
             inv_num = fact.ref_number or f"INV-{fact.amount}"
             node_id = f"Invoice_{inv_num}"
@@ -235,6 +244,21 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             )
             db.merge_relationship(node_id, "EVIDENCED_BY", doc_id)
             
+            # Insert into DuckDB spend facts
+            insert_spend_fact(
+                vendor=fact.vendor_name or "Vendor B Solutions",
+                amount=float(fact.amount or 0),
+                date=fact.date or "2024-01-20",
+                source_invoice=inv_num
+            )
+            
+            # Index into Qdrant vector store
+            upsert_document_chunk(
+                chunk_id=doc_id,
+                text=f"{fact.summary} {fact.source_snippet}",
+                payload={"file_name": doc_filename, "doc_type": "invoice", "summary": fact.summary, "vendor": fact.vendor_name, "amount": fact.amount}
+            )
+            
             pmt_id = f"Payment_{inv_num}"
             db.merge_node(
                 node_id=pmt_id,
@@ -253,7 +277,7 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             db.merge_relationship(node_id, "PAID_VIA", pmt_id)
             db.merge_relationship(pmt_id, "EVIDENCED_BY", doc_id)
 
-    # 3. Code Function & Commit Nodes
+    # 3. Code Function & Commit & Developer Nodes
     functions = code_analysis.get("functions", [])
     constants = code_analysis.get("constants", [])
 
@@ -291,6 +315,24 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
         if cfo_const and cfo_const.get("last_commit"):
             commit_info = cfo_const["last_commit"]
             commit_node_id = f"Commit_{commit_info['commit_hash'][:8]}"
+            dev_node_id = f"Dev_{commit_info['author'].replace(' ', '_')}"
+
+            # Merge Developer Node
+            db.merge_node(
+                node_id=dev_node_id,
+                label="Developer",
+                properties={
+                    "name": commit_info["author"],
+                    "role": "Software Engineer"
+                },
+                evidence={
+                    "source_path": commit_info["file_path"],
+                    "page_ref": 1,
+                    "source_snippet": f"Developer: {commit_info['author']}"
+                }
+            )
+
+            # Merge Commit Node
             db.merge_node(
                 node_id=commit_node_id,
                 label="Commit",
@@ -307,7 +349,11 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
                     "source_snippet": f"Commit {commit_info['commit_hash'][:8]}: {commit_info['message']} by {commit_info['author']} on {commit_info['date']}"
                 }
             )
+
+            db.merge_relationship(dev_node_id, "AUTHORED", commit_node_id)
+            db.merge_relationship(commit_node_id, "MODIFIED", func_node_id)
             db.merge_relationship(func_node_id, "LAST_CHANGED_BY", commit_node_id)
+
 
     # 4. Connect Business Relationships
     if "decision" in fact_nodes_by_type and "approval" in fact_nodes_by_type:

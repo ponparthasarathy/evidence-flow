@@ -4,7 +4,9 @@ import hashlib
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from anthropic import Anthropic
+from openai import OpenAI
 from app.config import settings
+from app.privacy import redact_pii
 
 class ExtractionResult(BaseModel):
     doc_type: str
@@ -172,13 +174,17 @@ def fallback_deterministic_extract(file_name: str, text: str, page_ref: int, sou
     )
 
 
-def extract_fact_with_llm(text: str, file_name: str, page_ref: int, source_path: str) -> ExtractionResult:
+def extract_fact_with_llm(text: str, file_name: str, page_ref: int, source_path: str, sovereign_mode: bool = False) -> ExtractionResult:
     """
-    Extracts facts from document text using Anthropic API or disk cache.
+    Extracts facts from document text using Anthropic API (or Ollama locally).
     Retries once on validation failure, then flags needs_review=True.
     """
     cache = load_cache()
-    doc_hash = compute_doc_hash(file_name, text)
+    
+    # 1. Privacy Gateway: Redact PII before it ever hits an LLM
+    safe_text = redact_pii(text)
+    
+    doc_hash = compute_doc_hash(file_name, safe_text)
 
     if doc_hash in cache:
         try:
@@ -220,12 +226,24 @@ Document Text:
     attempts = 2
     for attempt in range(attempts):
         try:
-            response = client.messages.create(
-                model="claude-3-7-sonnet-20250219",
-                max_tokens=1000,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            raw_text = response.content[0].text
+            if sovereign_mode:
+                # Route to local Ollama instance (Llama 3)
+                client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+                response = client.chat.completions.create(
+                    model="llama3",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                raw_text = response.choices[0].message.content
+            else:
+                # Route to cloud Anthropic
+                client = Anthropic(api_key=api_key)
+                response = client.messages.create(
+                    model="claude-3-7-sonnet-20250219",
+                    max_tokens=1000,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                raw_text = response.content[0].text
+
             # Parse JSON
             start_idx = raw_text.find("{")
             end_idx = raw_text.rfind("}") + 1
