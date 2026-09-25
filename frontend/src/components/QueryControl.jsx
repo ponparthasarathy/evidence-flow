@@ -5,8 +5,8 @@ export default function QueryControl({ onRunQuery1, onRunQuery2, onReingest, loa
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div className="glass-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(15, 23, 42, 0.8)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+    <div className="flat-panel" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
         <Search size={16} color="var(--text-muted)" />
         <input
           type="text"

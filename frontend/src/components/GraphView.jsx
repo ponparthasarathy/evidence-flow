@@ -46,80 +46,82 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
       selector: 'node',
       style: {
         'label': 'data(label)',
-        'color': '#F3F4F6',
+        'color': '#37352F',
+        'background-color': '#FFFFFF',
         'font-size': '12px',
         'font-family': 'Inter, sans-serif',
-        'font-weight': '600',
+        'font-weight': '500',
         'text-valign': 'center',
         'text-halign': 'center',
         'width': 'label',
-        'height': '36px',
+        'height': '32px',
         'padding': '12px',
-        'border-width': '2px',
-        'border-color': 'rgba(255,255,255,0.2)',
-        'transition-property': 'background-color, border-color, width, height',
+        'border-width': '1px',
+        'border-color': '#E9E9E7',
+        'transition-property': 'background-color, border-color',
         'transition-duration': '0.3s'
       }
     },
     {
       selector: 'node[type = "Decision"]',
-      style: { 'background-color': '#0284C7', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#0284C7', 'border-width': '2px', 'shape': 'round-rectangle' }
     },
     {
       selector: 'node[type = "Approval"]',
-      style: { 'background-color': '#2563EB', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#2563EB', 'border-width': '2px', 'shape': 'round-rectangle' }
     },
     {
       selector: 'node[type = "PurchaseOrder"]',
-      style: { 'background-color': '#059669', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#0F7B6C', 'border-width': '2px', 'shape': 'round-rectangle' }
     },
     {
       selector: 'node[type = "Invoice"]',
-      style: { 'background-color': '#D97706', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#D9730D', 'border-width': '2px', 'shape': 'round-rectangle' }
     },
     {
       selector: 'node[type = "Payment"]',
-      style: { 'background-color': '#9333EA', 'shape': 'round-rectangle' }
+      style: { 'border-color': '#A855F7', 'border-width': '2px', 'shape': 'round-rectangle' }
     },
     {
       selector: 'node[type = "CodeFunction"]',
-      style: { 'background-color': '#0D9488', 'shape': 'rectangle' }
+      style: { 'border-color': '#0D9488', 'border-width': '2px', 'shape': 'rectangle', 'background-color': '#F7F7F5' }
     },
     {
       selector: 'node[type = "Commit"]',
-      style: { 'background-color': '#475569', 'shape': 'ellipse' }
+      style: { 'border-color': '#787774', 'border-width': '2px', 'shape': 'ellipse' }
     },
     {
       selector: 'node[type = "Document"]',
-      style: { 'background-color': '#475569', 'shape': 'barrel' }
+      style: { 'border-color': '#787774', 'border-width': '2px', 'shape': 'barrel' }
     },
     {
       selector: 'node[isHighlighted = "true"]',
       style: {
-        'border-color': '#EF4444',
-        'border-width': '4px',
-        'background-color': '#DC2626',
-        'color': '#FFFFFF'
+        'border-color': '#BC0202',
+        'border-width': '3px',
+        'background-color': '#FDF2F2',
+        'color': '#BC0202',
+        'font-weight': '600'
       }
     },
     {
       selector: 'node:selected',
       style: {
-        'border-color': '#3B82F6',
-        'border-width': '4px'
+        'border-color': '#37352F',
+        'border-width': '3px'
       }
     },
     {
       selector: 'edge',
       style: {
         'width': 2,
-        'line-color': '#4B5563',
-        'target-arrow-color': '#4B5563',
+        'line-color': '#E9E9E7',
+        'target-arrow-color': '#E9E9E7',
         'target-arrow-shape': 'triangle',
         'curve-style': 'bezier',
         'label': 'data(label)',
         'font-size': '10px',
-        'color': '#9CA3AF',
+        'color': '#787774',
         'text-rotation': 'autorotate',
         'text-margin-y': -8
       }
@@ -127,9 +129,11 @@ export default function GraphView({ graphData, selectedNodeId, highlightedPath, 
     {
       selector: 'edge[isHighlighted = "true"]',
       style: {
-        'width': 4,
-        'line-color': '#EF4444',
-        'target-arrow-color': '#EF4444'
+        'width': 3,
+        'line-color': '#BC0202',
+        'target-arrow-color': '#BC0202',
+        'color': '#BC0202',
+        'font-weight': '600'
       }
     }
   ];
