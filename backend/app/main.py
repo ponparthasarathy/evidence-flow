@@ -18,6 +18,11 @@ from app.privacy import encrypt_aes_256_gcm, decrypt_aes_256_gcm
 from app.email_service import send_emergency_po_email
 from app.analytics import get_spend_by_vendor, get_chart_analytics
 from app.vector_store import search_similar
+from app.formal_verification import (
+    run_full_system_formal_verification,
+    verify_policy_code_equivalence,
+    verify_invoice_po_matching
+)
 from app.auth import (
     ROLES_PERMISSIONS,
     PRESEEDED_USERS,
@@ -392,6 +397,51 @@ def get_chart_analytics_data(
 def vector_search(q: str = Query(..., min_length=1)):
     results = search_similar(q, limit=5)
     return {"query": q, "results": results}
+
+
+class Z3CustomPayload(BaseModel):
+    policy_threshold: float = 500000.0
+    code_threshold: float = 1200000.0
+    threshold_name: str = "CFO_APPROVAL_LIMIT"
+    po_approved_limit: Optional[float] = 1200000.0
+    line_items: Optional[List[Dict[str, Any]]] = None
+
+
+@app.get("/verify/z3")
+@app.get("/api/verify/z3")
+def get_z3_formal_verification():
+    """
+    Executes Microsoft Z3 SMT Formal Verification over active policy rules, AST code constants, 
+    and line-item bounds, returning a mathematical proof of compliance satisfiability.
+    """
+    return run_full_system_formal_verification()
+
+
+@app.post("/verify/z3/custom")
+@app.post("/api/verify/z3/custom")
+def post_z3_custom_verification(payload: Z3CustomPayload):
+    """
+    Formally proves satisfiability and invariant equivalence for user-defined 
+    policy thresholds and AST code constants using Microsoft Z3 SMT Solver.
+    """
+    drift_proof = verify_policy_code_equivalence(
+        policy_threshold=payload.policy_threshold,
+        code_constant=payload.code_threshold,
+        constant_name=payload.threshold_name
+    )
+    
+    line_items_proof = None
+    if payload.po_approved_limit is not None and payload.line_items is not None:
+        line_items_proof = verify_invoice_po_matching(
+            po_approved_amount=payload.po_approved_limit,
+            line_items=payload.line_items
+        )
+        
+    return {
+        "verifier": "Microsoft Z3 SMT Formal Verification Engine (v5.1.0)",
+        "policy_vs_code_proof": drift_proof,
+        "line_item_bounds_proof": line_items_proof
+    }
 
 
 import git

@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Any, List
 from app.graph_load import db
+from app.formal_verification import verify_policy_code_equivalence, verify_invoice_po_matching
 
 def query_extra_line_items() -> Dict[str, Any]:
     """
@@ -55,10 +56,19 @@ def query_extra_line_items() -> Dict[str, Any]:
 
     summary = f"Flagged {len(findings)} unapproved invoice line item(s) not present in PO {po_node.get('properties', {}).get('po_number', '#4521')}."
     
+    # Run Z3 SMT Formal Line-Item Matching Verification
+    sample_items = [
+        {"description": f.get("extra_item", ""), "amount": f.get("extra_amount", 0.0), "is_approved": False}
+        for f in findings
+    ]
+    po_approved_limit = float(po_node.get("properties", {}).get("amount", 1200000.0))
+    z3_proof = verify_invoice_po_matching(po_approved_limit, sample_items)
+    
     return {
         "summary": summary,
         "findings": findings,
         "evidence": evidence,
+        "z3_verification": z3_proof,
         "confidence": 0.98,
         "needs_review": False
     }
@@ -133,10 +143,17 @@ def query_policy_drift() -> Dict[str, Any]:
 
     summary = f"Flagged {len(findings)} policy drift mismatch(es) where code appears out of sync with policy."
 
+    # Run Z3 SMT Formal Policy-vs-Code Equivalence Verification
+    p_val = findings[0]["policy_threshold"] if findings else 500000.0
+    c_val = findings[0]["code_threshold_value"] if findings else 1200000.0
+    c_name = findings[0]["code_threshold_name"] if findings else "CFO_APPROVAL_LIMIT"
+    z3_proof = verify_policy_code_equivalence(p_val, c_val, constant_name=c_name)
+
     return {
         "summary": summary,
         "findings": findings,
         "evidence": evidence,
+        "z3_verification": z3_proof,
         "confidence": 0.99,
         "needs_review": False
     }
