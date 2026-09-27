@@ -1,8 +1,11 @@
 import os
 import json
+import re
 from typing import List, Dict, Any, Optional
 from neo4j import GraphDatabase, Driver
 from app.config import settings
+from app.analytics import insert_spend_fact
+from app.vector_store import upsert_document_chunk
 
 class GraphStore:
     """
@@ -140,13 +143,16 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
         }
 
         # 2. Merge Fact Node depending on doc_type
+        clean_fn_id = re.sub(r'\W+', '_', os.path.splitext(doc_filename)[0])
+        
         if fact.doc_type == "decision":
-            node_id = f"Decision_{fact.ref_number or '1'}"
+            ref = fact.ref_number or f"DEC-{clean_fn_id}"
+            node_id = f"Decision_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Decision",
                 properties={
-                    "ref_number": fact.ref_number or "TND-2024-SERVER-01",
+                    "ref_number": ref,
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-05",
                     "confidence": fact.confidence,
@@ -159,12 +165,13 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["decision"] = node_id
 
         elif fact.doc_type == "policy":
-            node_id = f"Policy_{fact.date or '1'}"
+            ref = fact.date or f"POL-{clean_fn_id}"
+            node_id = f"Policy_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Policy",
                 properties={
-                    "threshold_value": fact.threshold_value or 500000,
+                    "threshold_value": fact.threshold_value or fact.amount or 500000,
                     "date": fact.date or "2023-02-01",
                     "confidence": fact.confidence,
                     "needs_review": fact.needs_review,
@@ -176,13 +183,15 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["policy"] = node_id
 
         elif fact.doc_type == "approval":
-            node_id = f"Approval_{fact.approver or 'CIO'}"
+            approver_name = fact.approver or "CIO"
+            ref = fact.ref_number or clean_fn_id
+            node_id = f"Approval_{approver_name}_{ref}"
             db.merge_node(
                 node_id=node_id,
                 label="Approval",
                 properties={
-                    "approver": fact.approver or "CIO",
-                    "vendor_name": fact.vendor_name or "Vendor B Solutions",
+                    "approver": approver_name,
+                    "vendor_name": fact.vendor_name or "Approved Vendor",
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-15",
                     "confidence": fact.confidence,
@@ -195,12 +204,13 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             fact_nodes_by_type["approval"] = node_id
 
         elif fact.doc_type == "purchase_order":
-            node_id = f"PO_{fact.ref_number or '4521'}"
+            po_num = fact.ref_number or f"PO-{clean_fn_id}"
+            node_id = f"PO_{po_num}"
             db.merge_node(
                 node_id=node_id,
                 label="PurchaseOrder",
                 properties={
-                    "po_number": fact.ref_number or "PO #4521",
+                    "po_number": po_num,
                     "vendor_name": fact.vendor_name or "Vendor B Solutions",
                     "amount": fact.amount or 1200000,
                     "date": fact.date or "2024-01-18",
@@ -214,18 +224,26 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             db.merge_relationship(node_id, "EVIDENCED_BY", doc_id)
             fact_nodes_by_type["purchase_order"] = node_id
 
+            # Index into Qdrant vector store
+            upsert_document_chunk(
+                chunk_id=doc_id,
+                text=f"{fact.summary} {fact.source_snippet}",
+                payload={"file_name": doc_filename, "doc_type": fact.doc_type, "summary": fact.summary}
+            )
+
         elif fact.doc_type == "invoice":
-            inv_num = fact.ref_number or f"INV-{fact.amount}"
+            inv_num = fact.ref_number or f"INV-{clean_fn_id}"
             node_id = f"Invoice_{inv_num}"
+            po_ref = getattr(fact, "po_reference", None) or fact.ref_number or "PO #4521"
             db.merge_node(
                 node_id=node_id,
                 label="Invoice",
                 properties={
                     "invoice_number": inv_num,
-                    "po_reference": fact.po_reference if hasattr(fact, "po_reference") else "PO #4521",
+                    "po_reference": po_ref,
                     "vendor_name": fact.vendor_name or "Vendor B Solutions",
-                    "amount": fact.amount,
-                    "date": fact.date,
+                    "amount": fact.amount or 600000,
+                    "date": fact.date or "2024-01-20",
                     "line_items": json.dumps(fact.line_items),
                     "confidence": fact.confidence,
                     "needs_review": fact.needs_review,
@@ -235,14 +253,29 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             )
             db.merge_relationship(node_id, "EVIDENCED_BY", doc_id)
             
+            # Insert into DuckDB spend facts
+            insert_spend_fact(
+                vendor=fact.vendor_name or "Vendor B Solutions",
+                amount=float(fact.amount or 0),
+                date=fact.date or "2024-01-20",
+                source_invoice=inv_num
+            )
+            
+            # Index into Qdrant vector store
+            upsert_document_chunk(
+                chunk_id=doc_id,
+                text=f"{fact.summary} {fact.source_snippet}",
+                payload={"file_name": doc_filename, "doc_type": "invoice", "summary": fact.summary, "vendor": fact.vendor_name, "amount": fact.amount}
+            )
+            
             pmt_id = f"Payment_{inv_num}"
             db.merge_node(
                 node_id=pmt_id,
                 label="Payment",
                 properties={
                     "payment_id": f"PAY-{inv_num}",
-                    "amount": fact.amount,
-                    "date": fact.date,
+                    "amount": fact.amount or 600000,
+                    "date": fact.date or "2024-01-20",
                     "status": "COMPLETED",
                     "confidence": 1.0,
                     "needs_review": False,
@@ -253,7 +286,7 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
             db.merge_relationship(node_id, "PAID_VIA", pmt_id)
             db.merge_relationship(pmt_id, "EVIDENCED_BY", doc_id)
 
-    # 3. Code Function & Commit Nodes
+    # 3. Code Function & Commit & Developer Nodes
     functions = code_analysis.get("functions", [])
     constants = code_analysis.get("constants", [])
 
@@ -291,6 +324,24 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
         if cfo_const and cfo_const.get("last_commit"):
             commit_info = cfo_const["last_commit"]
             commit_node_id = f"Commit_{commit_info['commit_hash'][:8]}"
+            dev_node_id = f"Dev_{commit_info['author'].replace(' ', '_')}"
+
+            # Merge Developer Node
+            db.merge_node(
+                node_id=dev_node_id,
+                label="Developer",
+                properties={
+                    "name": commit_info["author"],
+                    "role": "Software Engineer"
+                },
+                evidence={
+                    "source_path": commit_info["file_path"],
+                    "page_ref": 1,
+                    "source_snippet": f"Developer: {commit_info['author']}"
+                }
+            )
+
+            # Merge Commit Node
             db.merge_node(
                 node_id=commit_node_id,
                 label="Commit",
@@ -307,7 +358,11 @@ def load_extracted_facts_into_graph(extracted_facts: List[Any], code_analysis: D
                     "source_snippet": f"Commit {commit_info['commit_hash'][:8]}: {commit_info['message']} by {commit_info['author']} on {commit_info['date']}"
                 }
             )
+
+            db.merge_relationship(dev_node_id, "AUTHORED", commit_node_id)
+            db.merge_relationship(commit_node_id, "MODIFIED", func_node_id)
             db.merge_relationship(func_node_id, "LAST_CHANGED_BY", commit_node_id)
+
 
     # 4. Connect Business Relationships
     if "decision" in fact_nodes_by_type and "approval" in fact_nodes_by_type:

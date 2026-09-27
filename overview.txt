@@ -1,0 +1,254 @@
+EvidenceFlow 
+Decision → Money → Code Evidence Graph 
+A one-month hackathon project — complete idea, architecture, tech stack, and execution plan 
+1. One-Line Pitch 
+EvidenceFlow traces a business decision through approval, purchase order, invoice, and payment — all the 
+way to the exact line of code that executed it — and catches when what a policy says doesn't match what 
+the code actually does. Every answer comes with proof: the page, the email, the function. 
+2. The Problem 
+When a company spends money, the trail splits across four disconnected places: 
+Where the truth lives 
+What's wrong with it 
+Approval emails 
+Buried in inboxes, no structure, easy to lose 
+Tenders, POs, invoices (PDFs) 
+Finance/ERP data 
+Unstructured, manually cross-checked by hand 
+Numbers only — no context on why a payment happened 
+The code that processes payments 
+Nobody checks whether it actually enforces the policy stated on paper 
+The core gap: a policy like “invoices above ₹5,00,000 need CFO approval” exists only as a sentence in an email. 
+Nobody verifies the code that runs the payment system actually enforces that number. This drift between stated 
+policy and executed code is invisible until something goes wrong — and then it takes an audit team days to 
+manually reconstruct what happened. 
+Why the code matters, not just the documents 
+Think of it like a rulebook vs. a referee: 
+● Documents (PDFs, emails) = the rulebook. They say what should happen. 
+● Code = the referee. It's what actually happens, every time, automatically, without a human watching. 
+If you only read the rulebook, you never know if the referee is making bad calls. A PDF can't do anything — it 
+just records intent. The code is the actual mechanism that moves the money. Checking only documents tells you 
+what was promised; checking the code tells you what was actually enforced. You need both to know the truth. 
+3. The Solution 
+EvidenceFlow ingests documents, emails, and code, extracts structured facts from each, and links them into one 
+timeline + graph: 
+Request → Decision → Approval → Purchase Order → Invoice → Payment 
+│ 
+└── linked to ──► exact code function 
+that executed it 
+Every fact in the graph traces back to its exact source: the PDF page, the email, or the line of code. 
+The core example (your demo's “aha” moment) 
+● Tender: budget ₹12,00,000 for 1 server 
+● Approval email: CIO approves Vendor B on Jan 15, policy states “invoices above ₹5,00,000 need CFO 
+sign-off” 
+● Purchase Order: ₹12,00,000, split 50% now / 50% after install 
+● Invoice 1: ₹6,00,000 — matches PO (clean) 
+● Invoice 2: ₹6,50,000 — includes an extra ₹50,000 “premium support” line not in the PO (mismatch) 
+● Code (payment_processor.py): actually enforces a ₹10,00,000 CFO-approval threshold, not ₹5,00,000 
+Question asked in plain language: 
+“Show invoice items not in the approved PO, and which code handles them.” 
+Answer, with proof: 
+“Invoice 2 has a ₹50,000 'premium support' charge not in PO #4521, approved by the CIO on Jan 15. It's 
+processed by process_vendor_payment(), which enforces a ₹10,00,000 CFO-approval threshold — but the 
+approval email set that threshold at ₹5,00,000. Mismatch. Confidence: high on documents, flagged for 
+review on the code match.” 
+4. Target Users 
+● Internal audit & compliance teams 
+● Finance/accounts teams 
+● Procurement officers 
+● Engineering managers (need business context for code they own) 
+● CIOs/CFOs at organizations with non-trivial spend — universities, hospitals, mid-size companies, 
+government departments 
+5. High-Level Architecture 
+Documents / Emails / Code Repo 
+│ 
+▼ 
+┌────────────────────────┐ 
+│   Temporal Workflow      
+│ 
+└────────────────────────┘ 
+│ 
+┌──────────┴───────────┐ 
+│  Ingest → Parse & Extract │ 
+│   OCR → Presidio → LLM → Tree-sitter │ 
+└──────────┬───────────┘ 
+▼ 
+┌──────────────────────────┐ 
+│        
+Store               
+│ 
+│  Neo4j │ Qdrant │ DuckDB    
+│ 
+└──────────┬───────────────┘ 
+│        
+(OpenTelemetry spans → Jaeger) 
+▼ 
+FastAPI query endpoint (NL question → Cypher/vector/SQL) 
+│ 
+▼ 
+React + Vis.js graph UI (answer + evidence trail) 
+Pipeline in plain words 
+● Ingest — tender/PO/invoice PDFs, approval emails, and a code repo come in. 
+● OCR reads text out of PDFs. 
+● Presidio redacts sensitive fields (names, amounts tied to people) before anything touches the LLM — 
+the LLM only ever sees placeholders. 
+● LLM extracts structured facts from the redacted text: decisions, approvals, amounts, vendors, dates. 
+● Tree-sitter parses the code repo, finding the function(s) that process payments and any hardcoded 
+threshold values. 
+● Everything is stored: Neo4j holds the graph, Qdrant holds embeddings for semantic search, DuckDB 
+holds fast tabular analytics. 
+● Every step emits OpenTelemetry spans, visualized in Jaeger — the “self-healing, observable pipeline” 
+story, live on screen. 
+● A natural-language question comes in through FastAPI, gets turned into a Cypher/vector/SQL query, and 
+the answer comes back with its evidence trail. 
+6. Tech Stack (Full, One-Month Scope) 
+Layer 
+Tool 
+Role 
+Backend/API 
+FastAPI 
+Frontend 
+Orchestration, query endpoint 
+React + Vis.js / Cytoscape.js 
+OCR 
+Interactive graph explorer 
+Tesseract / PaddleOCR 
+PII redaction 
+Extract text from PDFs 
+Microsoft Presidio 
+LLM extraction 
+Local, pre-LLM redaction gateway 
+Cloud LLM (Claude/GPT) 
+Self-hosted LLM 
+Structures redacted text into facts 
+Ollama (Llama 3.x 8B) 
+Code parsing 
+“Sovereign mode” toggle 
+Tree-sitter 
+Graph database 
+AST parsing for functions + thresholds 
+Neo4j Community (Docker) 
+Vector database 
+Core evidence graph 
+Qdrant (Docker) 
+Semantic search 
+Workflow orchestration 
+Temporal (dev server) 
+Retryable ingest→extract→store 
+workflow 
+Tabular analytics 
+DuckDB 
+Observability 
+Spend-by-vendor, spend-over-time 
+OpenTelemetry + Jaeger 
+Storage 
+Live pipeline traces 
+Local filesystem / MinIO 
+Raw file storage 
+7. Privacy Architecture 
+This is a real differentiator, not a slide — implement it as working code, not a claim. 
+Document text ──► Presidio (detect + redact PII locally) 
+│ 
+                        ▼ 
+          Placeholder text only ──► LLM (cloud or Ollama) 
+                        │ 
+                        ▼ 
+          Structured facts (with placeholders) 
+                        │ 
+                        ▼ 
+     Re-identification map (stays local) ──► real values restored 
+                        │                     only at the UI boundary 
+                        ▼ 
+                  Displayed to user 
+● Standard mode: cloud LLM + Presidio gateway in front of every call. 
+● Sovereign mode: everything self-hosted (Neo4j, Qdrant, Temporal, Ollama) — nothing leaves the 
+machine/network at all. 
+ 
+“Your invoices, approval emails, and source code never leave your infrastructure — not even to summarize a 
+paragraph.” 
+8. Neo4j Graph Schema 
+(:Decision {id, description, date, status}) 
+(:Approval {approver_name, date, threshold_ref}) 
+(:PurchaseOrder {po_number, vendor, amount, date}) 
+(:Invoice {invoice_number, amount, date, line_items}) 
+(:Payment {amount, date, status}) 
+(:CodeFunction {name, file_path, repo, threshold_value}) 
+(:Document {type, source_path, page_ref}) 
+  
+(:Decision)-[:REQUIRES]->(:Approval) 
+(:Approval)-[:AUTHORIZES]->(:PurchaseOrder) 
+(:PurchaseOrder)-[:BILLED_BY]->(:Invoice) 
+(:Invoice)-[:PAID_VIA]->(:Payment) 
+(:Payment)-[:EXECUTED_BY]->(:CodeFunction) 
+(:Approval)-[:EVIDENCED_BY]->(:Document) 
+(:Invoice)-[:EVIDENCED_BY]->(:Document) 
+Core demo query — invoices bypassing the correct approval threshold: 
+MATCH (i:Invoice)-[:PAID_VIA]->(p:Payment)-[:EXECUTED_BY]->(f:CodeFunction) 
+MATCH (i)<-[:BILLED_BY]-(po:PurchaseOrder)<-[:AUTHORIZES]-(a:Approval) 
+WHERE i.amount > a.threshold_ref AND i.amount < f.threshold_value 
+RETURN i, a, f 
+9. Four-Week Execution Plan 
+Week 1 — Core pipeline, end-to-end (non-negotiable base) 
+● FastAPI + Neo4j (Docker) running 
+● Build one complete scenario: tender → approval email → PO → 2 invoices (1 clean, 1 mismatched) → 1 
+code repo 
+● OCR → LLM extraction → Neo4j graph, wired end-to-end 
+● Tree-sitter parsing the toy repo (hardcoded threshold values only) 
+Goal: the core mismatch query works, live, reliably, every time 
+Week 2 — Add enterprise-grade pieces, for real 
+● Presidio redaction gateway wired in front of every LLM call 
+● Temporal wrapping the pipeline as a real workflow with retries 
+● OpenTelemetry + Jaeger tracing every pipeline step, visible UI 
+● DuckDB analytics query (spend by vendor, spend over time) 
+● Start the real React + Vis.js graph explorer UI 
+Week 3 — Depth and robustness 
+● Qdrant + one real semantic query (“find similar past purchases”) 
+● Build a second, different scenario (different vendor/documents) — proves it's a system, not a script 
+● Confidence scoring + human-in-the-loop review queue as a real UI flow 
+● Build the counterfactual query: “if we lower the approval limit to ₹X, which past purchases would now 
+need extra sign-off?” — your strongest differentiator 
+● Error handling for OCR failures, low-confidence extractions, schema mismatches 
+Week 4 — Sovereign mode, polish, rehearsal 
+● Ollama self-hosted LLM as a real, working “sovereign mode” toggle 
+● Stress-test both scenarios end-to-end, multiple times 
+● Polish the graph UI — this is what judges see most 
+● Write the pitch: one-liner, problem, live demo script, architecture slide, roadmap 
+● Rehearse until you know exactly where the demo can break 
+10. What's Deliberately Out of Scope (Be Honest About This) 
+Excluded 
+Why 
+ABAP/SAP code support 
+Real enterprise procurement often runs on SAP/ABAP, but extracting and 
+parsing it reliably is a multi-month enterprise integration, not a 
+hackathon build. State this as a planned v2 capability — it shows domain 
+maturity, not a gap. 
+Full Value-Resolution Engine 
+(tracing thresholds through env vars 
+→ config files → DB-seeded rules → 
+runtime computation) 
+Genuinely hard program-analysis problem, closer to unsolved research 
+than a feature. Build literal/hardcoded values only; say so honestly if 
+asked. 
+11. Why This Wins (and What Actually Decides It) 
+In the idea's favor 
+● Code-linked decision graphs are genuinely uncommon — most document/AI projects stop at “AI reads 
+PDFs.” 
+● The invoice-mismatch-to-code trace is a concrete, 30-second-explainable wow-moment. 
+● A month is enough time to build this for real, not fake it. 
+What actually decides the outcome 
+● Execution order matters more than feature count — a rock-solid core scenario beats seven half-wired 
+tech pieces. Protect Week 1's goal above everything else. 
+● The live demo not breaking is what wins, not the idea on a slide. 
+● Confident, honest answers in Q&A — especially on ABAP and the Value-Resolution Engine scope — read 
+as maturity, not weakness, if stated upfront rather than fumbled. 
+● Rehearsal time in Week 4 is not optional polish. 
+12. Elevator Pitch Script (Round 1, ~90 seconds) 
+“Every company's spending leaves a paper trail — tenders, approval emails, invoices — and a code trail, the 
+software that actually processes payments. Nobody checks if those two trails agree. A policy might say 
+'invoices above ₹5 lakh need CFO approval' — but if the code enforcing that rule has a bug or an outdated 
+number, payments slip through with no one noticing until an audit, days later.” 
+“EvidenceFlow reads both: your documents and your code. It builds one graph connecting decision → 
+approval → purchase order → invoice → payment → the exact function that executed it. Ask it 'which 
+invoices bypassed required approval,' and it doesn't just answer — it shows you the PDF page, the email, and 
+the line of code, live.” 
+“And because this data is sensitive, everything can run fully on your own infrastructure — nothing ever has to 
+leave your network, not even to summarize a paragraph.”

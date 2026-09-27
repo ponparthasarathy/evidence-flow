@@ -221,7 +221,12 @@ def create_invoice_2_pdf():
 def setup_sample_repo():
     payment_processor_path = os.path.join(REPO_DIR, "payment_processor.py")
 
-    # If repo exists, re-initialize cleanly
+    # If repo exists, re-initialize cleanly by removing old git history
+    if os.path.exists(REPO_DIR):
+        import shutil
+        shutil.rmtree(REPO_DIR, ignore_errors=True)
+    os.makedirs(REPO_DIR, exist_ok=True)
+
     repo = git.Repo.init(REPO_DIR)
     
     # Configure git committer details locally for test stability

@@ -13,5 +13,7 @@ class Settings(BaseModel):
     NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "evidenceflow123")
     
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
 settings = Settings()
+
