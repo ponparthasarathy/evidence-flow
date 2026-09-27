@@ -23,6 +23,14 @@ from app.formal_verification import (
     verify_policy_code_equivalence,
     verify_invoice_po_matching
 )
+from app.temporal_client import (
+    execute_temporal_ingestion_workflow,
+    get_workflow_status
+)
+from app.slack_service import (
+    send_slack_weekly_report,
+    build_slack_weekly_report_payload
+)
 from app.auth import (
     ROLES_PERMISSIONS,
     PRESEEDED_USERS,
@@ -442,6 +450,58 @@ def post_z3_custom_verification(payload: Z3CustomPayload):
         "policy_vs_code_proof": drift_proof,
         "line_item_bounds_proof": line_items_proof
     }
+
+
+class TemporalWorkflowPayload(BaseModel):
+    sovereign_mode: bool = False
+    git_url: Optional[str] = None
+
+
+@app.post("/workflows/ingest")
+@app.post("/api/workflows/ingest")
+async def start_temporal_ingestion_workflow(payload: TemporalWorkflowPayload = Body(default=TemporalWorkflowPayload())):
+    """
+    Triggers a Temporal IO Durable Execution Workflow for ingestion, LLM extraction,
+    AST analysis, Z3 formal verification, and graph loading.
+    """
+    result = await execute_temporal_ingestion_workflow(
+        sovereign_mode=payload.sovereign_mode,
+        git_url=payload.git_url
+    )
+    return result
+
+
+@app.get("/workflows/status/{workflow_id}")
+@app.get("/api/workflows/status/{workflow_id}")
+def check_temporal_workflow_status(workflow_id: str):
+    """Returns execution status and step history for a Temporal workflow."""
+    return get_workflow_status(workflow_id)
+
+
+class SlackReportPayload(BaseModel):
+    webhook_url: Optional[str] = None
+    timeframe: str = "weekly"
+    channel: str = "#compliance-audit-alerts"
+
+
+@app.post("/slack/send-weekly-report")
+@app.post("/api/slack/send-weekly-report")
+def trigger_slack_weekly_report(payload: SlackReportPayload = Body(default=SlackReportPayload())):
+    """
+    Sends or simulates an executive weekly audit report to Slack Bot via Slack Webhook.
+    """
+    return send_slack_weekly_report(
+        webhook_url=payload.webhook_url,
+        timeframe=payload.timeframe,
+        channel=payload.channel
+    )
+
+
+@app.get("/slack/preview")
+@app.get("/api/slack/preview")
+def preview_slack_block_kit(timeframe: str = Query(default="weekly"), channel: str = Query(default="#compliance-audit-alerts")):
+    """Returns the formatted Slack Block Kit JSON payload preview."""
+    return build_slack_weekly_report_payload(timeframe=timeframe, channel=channel)
 
 
 import git

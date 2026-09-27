@@ -25,7 +25,7 @@ def send_emergency_po_email(
     recipients = [r for r in recipients if r]
 
     msg = MIMEMultipart("mixed")
-    msg["Subject"] = f"🚨 URGENT: Emergency PO Approval Required (₹{amount:,.2f}) - {po_title}"
+    msg["Subject"] = f"URGENT: Emergency PO Approval Required (₹{amount:,.2f}) - {po_title}"
     msg["From"] = f"PO Creator <{sender_email}>"
     msg["To"] = ", ".join(recipients)
 
@@ -35,7 +35,7 @@ def send_emergency_po_email(
     <body style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px; color: #333;">
       <div style="max-width: 650px; background: #ffffff; margin: 0 auto; border-radius: 8px; border: 1px solid #e1e4e8; padding: 24px;">
         <div style="border-bottom: 3px solid #BC0202; padding-bottom: 12px; margin-bottom: 16px;">
-          <h2 style="color: #BC0202; margin: 0; font-size: 20px;">🚨 Emergency Purchase Order Authorization Request</h2>
+          <h2 style="color: #BC0202; margin: 0; font-size: 20px;">Emergency Purchase Order Authorization Request</h2>
           <div style="font-size: 13px; color: #666; margin-top: 4px;">EvidenceFlow Compliance & Governance System</div>
         </div>
 

@@ -1,49 +1,96 @@
-import duckdb
+try:
+    import duckdb
+    HAS_DUCKDB = True
+except Exception:
+    import sqlite3
+    HAS_DUCKDB = False
+
 import os
 from typing import List, Dict
 
 # Ensure data directory exists
 os.makedirs('data', exist_ok=True)
 DB_PATH = 'data/analytics.duckdb'
+SQLITE_PATH = 'data/analytics.db'
 
 def get_connection():
-    return duckdb.connect(DB_PATH)
+    if HAS_DUCKDB:
+        return duckdb.connect(DB_PATH)
+    else:
+        conn = sqlite3.connect(SQLITE_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def initialize_db():
-    with get_connection() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS spend_facts (
-                vendor VARCHAR,
-                amount DOUBLE,
-                date DATE,
-                source_invoice VARCHAR
-            )
-        """)
+    if HAS_DUCKDB:
+        with get_connection() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS spend_facts (
+                    vendor VARCHAR,
+                    amount DOUBLE,
+                    date DATE,
+                    source_invoice VARCHAR
+                )
+            """)
+    else:
+        with sqlite3.connect(SQLITE_PATH) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS spend_facts (
+                    vendor TEXT,
+                    amount REAL,
+                    date TEXT,
+                    source_invoice TEXT
+                )
+            """)
 
 def insert_spend_fact(vendor: str, amount: float, date: str, source_invoice: str):
     initialize_db()
-    with get_connection() as conn:
-        existing = conn.execute(
-            "SELECT count(*) FROM spend_facts WHERE source_invoice = ?", 
-            [source_invoice]
-        ).fetchone()[0]
-        
-        if existing == 0:
-            conn.execute(
-                "INSERT INTO spend_facts VALUES (?, ?, ?, ?)",
-                [vendor, amount, date, source_invoice]
+    if HAS_DUCKDB:
+        with get_connection() as conn:
+            existing = conn.execute(
+                "SELECT count(*) FROM spend_facts WHERE source_invoice = ?", 
+                [source_invoice]
+            ).fetchone()[0]
+            
+            if existing == 0:
+                conn.execute(
+                    "INSERT INTO spend_facts VALUES (?, ?, ?, ?)",
+                    [vendor, amount, date, source_invoice]
+                )
+    else:
+        with sqlite3.connect(SQLITE_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT count(*) FROM spend_facts WHERE source_invoice = ?", 
+                (source_invoice,)
             )
+            existing = cursor.fetchone()[0]
+            if existing == 0:
+                cursor.execute(
+                    "INSERT INTO spend_facts VALUES (?, ?, ?, ?)",
+                    (vendor, amount, date, source_invoice)
+                )
 
 def get_spend_by_vendor() -> List[Dict]:
     """Returns total spend grouped by vendor for UI analytics."""
     initialize_db()
-    with get_connection() as conn:
-        res = conn.execute("""
-            SELECT vendor, SUM(amount) as total_spend, COUNT(*) as invoice_count
-            FROM spend_facts 
-            GROUP BY vendor 
-            ORDER BY total_spend DESC
-        """).fetchall()
+    if HAS_DUCKDB:
+        with get_connection() as conn:
+            res = conn.execute("""
+                SELECT vendor, SUM(amount) as total_spend, COUNT(*) as invoice_count
+                FROM spend_facts 
+                GROUP BY vendor 
+                ORDER BY total_spend DESC
+            """).fetchall()
+    else:
+        with sqlite3.connect(SQLITE_PATH) as conn:
+            cursor = conn.cursor()
+            res = cursor.execute("""
+                SELECT vendor, SUM(amount) as total_spend, COUNT(*) as invoice_count
+                FROM spend_facts 
+                GROUP BY vendor 
+                ORDER BY total_spend DESC
+            """).fetchall()
     
     if not res:
         return [

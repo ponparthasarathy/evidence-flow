@@ -14,7 +14,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
-import { BarChart3, Calendar, ShieldAlert, ShieldCheck, TrendingUp, AlertTriangle, Layers, DollarSign, RefreshCw, Lock } from 'lucide-react';
+import { BarChart3, Calendar, ShieldAlert, ShieldCheck, TrendingUp, AlertTriangle, Layers, DollarSign, RefreshCw, Lock, Send } from 'lucide-react';
 
 // Register Chart.js components
 ChartJS.register(
@@ -37,6 +37,40 @@ export default function GraphAnalyticsScreen({ currentUser }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Slack Integration State
+  const [showSlackModal, setShowSlackModal] = useState(false);
+  const [slackWebhook, setSlackWebhook] = useState('');
+  const [slackChannel, setSlackChannel] = useState('#compliance-audit-alerts');
+  const [sendingSlack, setSendingSlack] = useState(false);
+  const [slackResult, setSlackResult] = useState(null);
+
+  const handleOpenSlackModal = () => {
+    setSlackResult(null);
+    setShowSlackModal(true);
+  };
+
+  const handleSendSlackReport = async () => {
+    setSendingSlack(true);
+    try {
+      const res = await fetch('/api/slack/send-weekly-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhook_url: slackWebhook,
+          timeframe: timeframe,
+          channel: slackChannel
+        })
+      });
+      const resJson = await res.json();
+      setSlackResult(resJson);
+    } catch (err) {
+      console.error("Slack error:", err);
+      setSlackResult({ status: 'error', notice: 'Failed to connect to backend Slack API.' });
+    } finally {
+      setSendingSlack(false);
+    }
+  };
 
   const fetchAnalytics = async (tf) => {
     setLoading(true);
@@ -285,37 +319,122 @@ export default function GraphAnalyticsScreen({ currentUser }) {
           </p>
         </div>
 
-        {/* Timeframe Selector Pill Group */}
-        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          {['daily', 'weekly', 'monthly', 'yearly'].map((tf) => {
-            const active = timeframe === tf;
-            return (
-              <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: active ? 'var(--accent-primary)' : 'transparent',
-                  color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                  fontWeight: active ? 600 : 500,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                  transition: 'all 150ms ease-in-out',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Calendar size={14} />
-                {tf} View
-              </button>
-            );
-          })}
+        {/* Action Controls: Timeframe & Slack Integration */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => handleOpenSlackModal()}
+            className="btn-primary"
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              background: '#4A154B', // Official Slack Purple
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              border: 'none'
+            }}
+          >
+            <Send size={14} /> Send Slack Report
+          </button>
+
+          {/* Timeframe Selector Pill Group */}
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            {['daily', 'weekly', 'monthly', 'yearly'].map((tf) => {
+              const active = timeframe === tf;
+              return (
+                <button
+                  key={tf}
+                  onClick={() => setTimeframe(tf)}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: active ? 'var(--accent-primary)' : 'transparent',
+                    color: active ? '#FFFFFF' : 'var(--text-secondary)',
+                    fontWeight: active ? 600 : 500,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    transition: 'all 150ms ease-in-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Calendar size={14} />
+                  {tf} View
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
+
+      {/* Slack Bot Modal */}
+      {showSlackModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="flat-panel" style={{ background: '#FFFFFF', padding: '28px', maxWidth: '600px', width: '100%', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: '#4A154B', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>#</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Dispatch Report to Slack Bot</h3>
+              </div>
+              <button onClick={() => setShowSlackModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
+            </div>
+
+            {slackResult && (
+              <div style={{ padding: '12px 16px', background: 'rgba(46,117,89,0.08)', border: '1px solid var(--accent-success)', borderRadius: '6px', color: 'var(--accent-success)', fontSize: '0.875rem', fontWeight: 600 }}>
+                ✓ {slackResult.notice || "Slack Report sent successfully!"} ({slackResult.dispatch_type})
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.875rem' }}>
+              <div>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px', color: 'var(--text-primary)' }}>Target Slack Channel</label>
+                <input
+                  type="text"
+                  value={slackChannel}
+                  onChange={(e) => setSlackChannel(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.875rem' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '4px', color: 'var(--text-primary)' }}>Slack Webhook URL (Optional for simulation)</label>
+                <input
+                  type="text"
+                  placeholder="https://hooks.slack.com/services/T00/B00/XXXX"
+                  value={slackWebhook}
+                  onChange={(e) => setSlackWebhook(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.875rem', fontFamily: 'monospace' }}
+                />
+              </div>
+
+              <div style={{ background: '#F8F9FA', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>SLACK BLOCK KIT PREVIEW ({timeframe.toUpperCase()})</div>
+                <div style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-primary)', whiteSpace: 'pre-wrap' }}>
+                  📊 *EvidenceFlow Executive Report*\n• *Spend:* ₹{data?.period_total_spend?.toLocaleString('en-IN')}\n• *Flagged Anomalies:* {data?.total_anomalies} findings\n• *Z3 Formal Verification:* ❌ UNSAT CONTRADICTION
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button onClick={() => setShowSlackModal(false)} className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>Cancel</button>
+              <button
+                onClick={handleSendSlackReport}
+                disabled={sendingSlack}
+                style={{ padding: '8px 18px', background: '#4A154B', color: '#FFF', border: 'none', borderRadius: '6px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Send size={14} /> {sendingSlack ? "Dispatching..." : "Send to Slack"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
