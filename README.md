@@ -127,3 +127,4 @@ $env:PYTHONPATH="backend"
 3. **Synthetic Demo Data**: Pre-generated synthetic PDF and email artifacts for demonstration.
 4. **No OCR**: Ingestion expects text-native PDFs (generated via ReportLab) and plaintext `.eml` documents. Scanned image PDF OCR (e.g. Tesseract) is omitted in v0.
 5. **No ABAP / Legacy ERP Parsing**: Code analysis supports Python repositories. ABAP, Java, or C# AST parsing will be added in subsequent phases.
+# Evidence-Flow
